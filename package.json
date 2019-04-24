@@ -1,0 +1,63 @@
+{
+  "name": "@g2a/config",
+  "version": "1.0.0-not-released",
+  "description": "Set of utilities for loading configuration.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/g2a-com/node-config"
+  },
+  "license": "UNLICENSED",
+  "files": [
+    "dist/*",
+    "src/*",
+    "typings/*"
+  ],
+  "main": "dist/index.js",
+  "typings": "typings/index.d.ts",
+  "scripts": {
+    "build": "rm -rf dist typings && tsc",
+    "prepack": "npm run build",
+    "test": "jest"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "coverageThreshold": {
+      "global": {
+        "branches": 0,
+        "functions": 0,
+        "lines": 0,
+        "statements": 0
+      }
+    },
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "./test/tsconfig.json"
+      }
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "testEnvironment": "node",
+    "testRegex": "/test/.*.spec.ts",
+    "transform": {
+      "^.+\\.(ts)$": "ts-jest"
+    },
+    "verbose": true
+  },
+  "dependencies": {
+    "@g2a/standard-error": "^1.2.0",
+    "@types/ajv": "^1.0.0",
+    "@types/json-schema": "^7.0.3",
+    "@types/lodash.camelcase": "^4.3.6",
+    "ajv": "^6.10.0",
+    "json-schema-ref-parser": "^6.1.0",
+    "lodash.camelcase": "^4.3.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.1",
+    "jest": "^24.1.0",
+    "ts-jest": "^23.10.5",
+    "typescript": "^3.0.3"
+  }
+}

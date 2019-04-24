@@ -1,6 +1,6 @@
 {
   "name": "@g2a/config",
-  "version": "1.0.0-not-released",
+  "version": "1.0.0",
   "description": "Set of utilities for loading configuration.",
   "repository": {
     "type": "git",
@@ -46,7 +46,7 @@
     "verbose": true
   },
   "dependencies": {
-    "@g2a/standard-error": "^1.2.0",
+    "@g2a/standard-error": "^1.2.1",
     "@types/ajv": "^1.0.0",
     "@types/json-schema": "^7.0.3",
     "@types/lodash.camelcase": "^4.3.6",

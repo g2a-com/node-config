@@ -1,0 +1,47 @@
+title: Config
+description: Environment variables for service
+type: object
+required:
+  - database
+  - foobar
+properties:
+  database:
+    type: object
+    description: Database details
+    properties:
+      connectionString:
+        type: string
+        description: Connection string for database. It MUST be an URL with credentials.
+        example: "mongodb://USERNAME:PASSWORD@HOST:PORT[,host2[:port2],...[,hostN[:portN]]]/cart[?replicaSet=REPLICA_SET_NAME]"
+        format: uri
+      poolSize:
+        type: integer
+        description: MongoDB connections pool size.
+        default: 10
+        minimum: 1
+  foobar:
+    type: object
+    description: Foobar API details
+    required:
+      - username
+      - token
+      - uri
+    properties:
+      username:
+        type: string
+        description: Name of the client.
+        example: cart
+      token:
+        type: string
+        description: Client authentication token.
+        example: fa6fd5e231acf945fe4fdc2fa0b3d
+      uri:
+        type: string
+        description: URI for foobar api.
+        format: uri
+        example: https://www.foobar.com/api/v2
+      timeoutInMs:
+        type: number
+        description: Foobar api timeout in miliseconds.
+        default: 700
+        example: 700

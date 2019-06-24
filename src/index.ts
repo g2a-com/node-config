@@ -3,28 +3,43 @@ import camelCase from 'lodash.camelcase';
 import { ValidationError } from '@g2a/standard-error';
 import jsonschema from 'json-schema-ref-parser';
 
+export type LoadParams = {
+  schemaPath: string,
+  data: {
+    [key: string]: string | undefined;
+  }
+}
+
 /**
  * Loads and validates configuration form environment variables based on provided json schema.
  */
-export async function loadFromEnvironment<T> (opts: { schemaPath: string }): Promise<T> {
-  const schema = await jsonschema.dereference(opts.schemaPath);
-  const config = unflattenUsingSchema(schema, process.env);
+export async function loadFromEnvironment<T> ({ schemaPath }: { schemaPath: string }): Promise<T> {
+  return load({ schemaPath, data: process.env });
+}
+
+/**
+ * Loads and validates configuration form data based on provided json schema.
+ */
+export async function load<T> ({ schemaPath, data }: LoadParams): Promise<T> {
+  const schema = await jsonschema.dereference(schemaPath);
+  const config = unflattenUsingSchema(schema, data);
   coerceConfig(schema, config);
+
   return config;
 }
 
 function unflattenUsingSchema (schema: jsonschema.JSONSchema, data: Record<string, any>): any {
   if (schema.type === 'object') {
     return Object.entries(schema.properties || {})
-      .filter(([propName, propSchema]) => !!Object.keys(data).find(k => camelCase(k).startsWith(propName)))
-      .map(([propName, propSchema]) => [ propName, unflattenUsingSchema(
+      .filter(([propName, propSchema]) => !!Object.keys(data).find(k => camelCase(k).startsWith(camelCase(propName))))
+      .map(([propName, propSchema]) => [propName, unflattenUsingSchema(
         propSchema,
         Object.entries(data)
           .map(([k, v]) => [camelCase(k), v])
-          .filter(([k, v]) => k.startsWith(propName))
+          .filter(([k, v]) => k.startsWith(camelCase(propName)))
           .map(([k, v]) => [k.slice(propName.length), v] as [string, any])
           .reduce((obj, [k, v]) => Object.assign(obj, { [k]: v }), {})
-      ) ])
+      )])
       .reduce((obj, [k, v]) => Object.assign(obj, { [k]: v }), {});
   } else {
     return data[''];

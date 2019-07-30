@@ -50,14 +50,14 @@
     "@types/ajv": "^1.0.0",
     "@types/json-schema": "^7.0.3",
     "@types/lodash.camelcase": "^4.3.6",
-    "ajv": "^6.10.0",
-    "json-schema-ref-parser": "^6.1.0",
+    "ajv": "^6.10.2",
+    "json-schema-ref-parser": "^7.1.0",
     "lodash.camelcase": "^4.3.0"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.1",
-    "jest": "^24.1.0",
-    "ts-jest": "^23.10.5",
-    "typescript": "^3.0.3"
+    "@types/jest": "^24.0.16",
+    "jest": "^24.8.0",
+    "ts-jest": "^24.0.2",
+    "typescript": "^3.5.3"
   }
 }

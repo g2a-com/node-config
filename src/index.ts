@@ -6,7 +6,7 @@ import jsonschema from 'json-schema-ref-parser';
 export type LoadParams = {
   schemaPath: string,
   data: {
-    [key: string]: string | undefined;
+    [key: string]: any;
   }
 }
 
@@ -22,27 +22,40 @@ export async function loadFromEnvironment<T> ({ schemaPath }: { schemaPath: stri
  */
 export async function load<T> ({ schemaPath, data }: LoadParams): Promise<T> {
   const schema = await jsonschema.dereference(schemaPath);
-  const config = unflattenUsingSchema(schema, data);
+  const mappedData = objectToMap(data);
+  const config = unflattenUsingSchema(schema, mappedData);
   coerceConfig(schema, config);
-
   return config;
 }
 
-function unflattenUsingSchema (schema: jsonschema.JSONSchema, data: Record<string, any>): any {
+/**
+ * unflattenUsingSchema takes schema, data and keyPrefix to return nested object with values
+ * @param schema
+ * @param data
+ * @param keyPrefix
+ */
+function unflattenUsingSchema (schema: jsonschema.JSONSchema, data: Map<string, any>, keyPrefix: string = ''): any {
   if (schema.type === 'object') {
     return Object.entries(schema.properties || {})
-      .filter(([propName, propSchema]) => !!Object.keys(data).find(k => camelCase(k).startsWith(camelCase(propName))))
-      .map(([propName, propSchema]) => [propName, unflattenUsingSchema(
-        propSchema,
-        Object.entries(data)
-          .map(([k, v]) => [camelCase(k), v])
-          .filter(([k, v]) => k.startsWith(camelCase(propName)))
-          .map(([k, v]) => [k.slice(propName.length), v] as [string, any])
-          .reduce((obj, [k, v]) => Object.assign(obj, { [k]: v }), {})
-      )])
-      .reduce((obj, [k, v]) => Object.assign(obj, { [k]: v }), {});
-  } else {
-    return data[''];
+      .map(([k, v]) => {
+        // create key with prefix (for nested objects)
+        const key = camelCase(`${keyPrefix}_${k}`);
+
+        // if property has x-sourceKey then get value by it if not try to get value by key
+        const value = v['x-sourceKey'] ? data.get(camelCase(v['x-sourceKey'])) : data.get(key);
+
+        // truthy value means that we have value for this property and no need to go deeper
+        if (value !== undefined) {
+          return [k, value];
+        }
+
+        // if object, dig down until we will be able to get value
+        return [k, unflattenUsingSchema(v, data, key)];
+      })
+      .reduce((acc, [k, v]) => ({
+        ...acc,
+        [k as string]: v
+      }), {});
   }
 }
 
@@ -65,4 +78,14 @@ function coerceConfig (schema: object, data: object, ajvOpts: AjvOptions = {}): 
       }))
     });
   }
+}
+
+/**
+ * objectToMap iterates over entries and return Map
+ * @param source
+ */
+function objectToMap (source: object): Map<string, any> {
+  return Object
+    .entries(source)
+    .reduce((acc, [k, v]) => acc.set(camelCase(k), v), new Map());
 }

@@ -45,3 +45,34 @@ properties:
         description: Foobar api timeout in miliseconds.
         default: 700
         example: 700
+      customKey:
+        type: number
+        description: Custom foobar key.
+        example: 700
+        x-sourceKey: CUSTOM_KEY
+      store:
+        type: object
+        description: Foobar API details
+        required:
+          - redis
+        properties:
+          redis:
+            type: string
+            description: Name of the redis.
+            example: redis://192.168.1.0/2
+          redisExternal:
+            type: string
+            description: Name of the redis.
+            example: redis://192.168.1.0/2
+            x-sourceKey: RE_CONNECTING_STRING2
+  redis:
+    type: string
+    description: Connecting string to redis
+    example: redis://192.168.1.0/1
+    format: uri
+    x-sourceKey: 'RE_CONNECTING_STRING'
+  isEnabled:
+    type: boolean
+    description: Is connection to redis enabled
+    example: false
+    default: true

@@ -1,0 +1,74 @@
+title: Config
+description: Environment variables for service
+type: object
+x-sourceFormat: camel-case
+required:
+  - database
+  - foobar
+properties:
+  database:
+    type: object
+    description: Database details
+    properties:
+      connectionString:
+        type: string
+        description: Connection string for database. It MUST be an URL with credentials.
+        example: "mongodb://USERNAME:PASSWORD@HOST:PORT[,host2[:port2],...[,hostN[:portN]]]/cart[?replicaSet=REPLICA_SET_NAME]"
+        format: uri
+      poolSize:
+        type: integer
+        description: MongoDB connections pool size.
+        default: 10
+        minimum: 1
+  foobar:
+    type: object
+    description: Foobar API details
+    required:
+      - username
+      - token
+      - uri
+    properties:
+      username:
+        type: string
+        description: Name of the client.
+        example: cart
+      token:
+        type: string
+        description: Client authentication token.
+        example: fa6fd5e231acf945fe4fdc2fa0b3d
+      uri:
+        type: string
+        description: URI for foobar api.
+        format: uri
+        example: https://www.foobar.com/api/v2
+      timeoutInMs:
+        type: number
+        description: Foobar api timeout in miliseconds.
+        default: 700
+        example: 700
+      customKey:
+        type: number
+        description: Custom foobar key.
+        example: 700
+        x-sourceKey: CUSTOM_KEY
+      store:
+        type: object
+        description: Foobar API details
+        required:
+          - redis
+        properties:
+          redis:
+            type: string
+            description: Name of the redis.
+            example: redis://192.168.1.0/2
+          redisExternal:
+            type: string
+            description: Name of the redis.
+            example: redis://192.168.1.0/2
+            x-sourceKey: RE_CONNECTING_STRING2
+  redis:
+    type: string
+    description: Connecting string to redis
+    example: redis://192.168.1.0/1
+    format: uri
+    x-sourceKey: 'RE_CONNECTING_STRING'

@@ -2,7 +2,7 @@ import 'jest';
 import { load, loadFromEnvironment } from './../src/index';
 
 describe('config', function () {
-  it('should load config as json schema from process.env object (camel case)', async () => {
+  it('should load config from process.env object (camel case)', async () => {
     const schemaPath = `test/mocks/json-schema-base.yaml`;
     process.env = {
       ...process.env,
@@ -41,7 +41,7 @@ describe('config', function () {
     });
   });
 
-  it('should load config (with sourceKey) as json schema from process.env object (camel case)', async () => {
+  it('should load config (with sourceKey) from process.env object (camel case)', async () => {
     const schemaPath = `test/mocks/json-schema-base.yaml`;
     process.env = {
       ...process.env,
@@ -71,7 +71,7 @@ describe('config', function () {
     });
   });
 
-  it('should load config as json schema from source object (camel case)', async () => {
+  it('should load config (with sourceKey) from source (camel case)', async () => {
     const schemaPath = `test/mocks/json-schema-base.yaml`;
     const data = {
       customKey: '100000',
@@ -148,7 +148,7 @@ describe('config', function () {
     });
   });
 
-  it('should load config as json schema from source object (upper case)', async () => {
+  it('should load config from source (upper case)', async () => {
     const schemaPath = `test/mocks/json-schema-base.yaml`;
     const data = {
       CUSTOM_KEY: '100000',
@@ -248,5 +248,486 @@ describe('config', function () {
 
     const config = async () => load({ schemaPath, data });
     expect(config()).rejects.toThrowError(Error('Invalid configuration'));
+  });
+});
+
+describe('format', () => {
+  describe('snake case', () => {
+    it('should load config from process.env object', async () => {
+      const schemaPath = `test/mocks/json-schema-format-snake-case.yaml`;
+      process.env = {
+        ...process.env,
+        custom_key: '100000',
+        database_connection_string: 'http://o.oo',
+        database_pool_size: '9',
+        foobar_store_redis: 'redis://192.1.1.1/1',
+        foobar_timeout_in_ms: '100',
+        foobar_token: 'token',
+        foobar_uri: 'https://www.foobar.com/api/v2',
+        foobar_username: 'user',
+        re_connecting_string: 'redis://192.1.1.1/2',
+        re_connecting_string_2: 'redis://192.1.1.1/3'
+      };
+
+      const config = await loadFromEnvironment({ schemaPath });
+
+      expect(config).toMatchObject({
+        database: expect.objectContaining({
+          connectionString: process.env.database_connection_string,
+          poolSize: process.env.database_pool_size && parseInt(process.env.database_pool_size, 10)
+        }),
+        foobar: expect.objectContaining({
+          username: process.env.foobar_username,
+          token: process.env.foobar_token,
+          uri: process.env.foobar_uri,
+          timeoutInMs: process.env.foobar_timeout_in_ms && parseInt(process.env.foobar_timeout_in_ms, 10),
+          customKey: 100000,
+          store: expect.objectContaining({
+            redis: process.env.foobar_store_redis,
+            redisExternal: process.env.re_connecting_string_2
+          })
+        }),
+        redis: process.env.re_connecting_string
+      });
+    });
+
+    it('should load config with form source', async () => {
+      const schemaPath = `test/mocks/json-schema-format-snake-case.yaml`;
+      const data = {
+        custom_key: '100000',
+        database_connection_string: 'http://o.oo',
+        database_pool_size: '9',
+        foobar_token: 'token',
+        foobar_uri: 'https://www.foobar.com/api/v2',
+        foobar_username: 'user',
+        foobar_store_redis: 'redis://192.1.1.1/1'
+      };
+
+      const config = await load({ data, schemaPath });
+
+      expect(config).toMatchObject({
+        database: expect.objectContaining({
+          connectionString: data.database_connection_string,
+          poolSize: data.database_pool_size && parseInt(data.database_pool_size, 10)
+        }),
+        foobar: expect.objectContaining({
+          username: data.foobar_username,
+          token: data.foobar_token,
+          uri: data.foobar_uri,
+          customKey: 100000,
+          store: expect.objectContaining({
+            redis: data.foobar_store_redis
+          })
+        }),
+        redis: undefined
+      });
+    });
+
+    it('should throw error on source with one required field in different case format', async () => {
+      const schemaPath = `test/mocks/json-schema-format-snake-case.yaml`;
+      const data = {
+        custom_key: '100000',
+        database_connection_string: 'http://o.oo',
+        database_pool_size: '9',
+        foobar_token: 'token',
+        foobar_uri: 'https://www.foobar.com/api/v2',
+        foobar_username: 'user',
+        'FOOBAR-STORE-REDIS': 'redis://192.1.1.1/1'
+      };
+
+      const config = async () => load({ schemaPath, data });
+
+      expect(config()).rejects.toThrowError(Error('Invalid configuration'));
+      config().catch((err) => {
+        expect(err).toHaveProperty('errors', expect.arrayContaining([
+          expect.objectContaining({
+            code: 'validation-error',
+            field: 'config.foobar.store'
+          })
+        ]));
+      });
+    });
+  });
+
+  describe('camel case', () => {
+    it('should load config from process.env object', async () => {
+      const schemaPath = `test/mocks/json-schema-format-camel-case.yaml`;
+      process.env = {
+        ...process.env,
+        customKey: '100000',
+        databaseConnectionString: 'http://o.oo',
+        databasePoolSize: '9',
+        foobarStoreRedis: 'redis://192.1.1.1/1',
+        foobarTimeoutInMs: '100',
+        foobarToken: 'token',
+        foobarUri: 'https://www.foobar.com/api/v2',
+        foobarUsername: 'user',
+        reConnectingString: 'redis://192.1.1.1/2',
+        reConnectingString_2: 'redis://192.1.1.1/3'
+      };
+
+      const config = await loadFromEnvironment({ schemaPath });
+
+      expect(config).toMatchObject({
+        database: expect.objectContaining({
+          connectionString: process.env.databaseConnectionString,
+          poolSize: process.env.databasePoolSize && parseInt(process.env.databasePoolSize, 10)
+        }),
+        foobar: expect.objectContaining({
+          username: process.env.foobarUsername,
+          token: process.env.foobarToken,
+          uri: process.env.foobarUri,
+          timeoutInMs: process.env.foobarTimeoutInMs && parseInt(process.env.foobarTimeoutInMs, 10),
+          customKey: 100000,
+          store: expect.objectContaining({
+            redis: process.env.foobarStoreRedis,
+            redisExternal: process.env.reConnectingString2
+          })
+        }),
+        redis: process.env.reConnectingString
+      });
+    });
+
+    it('should load config form source', async () => {
+      const schemaPath = `test/mocks/json-schema-format-camel-case.yaml`;
+      const data = {
+        customKey: '100000',
+        databaseConnectionString: 'http://o.oo',
+        databasePoolSize: '9',
+        foobarToken: 'token',
+        foobarUri: 'https://www.foobar.com/api/v2',
+        foobarUsername: 'user',
+        foobarStoreRedis: 'redis://192.1.1.1/1'
+      };
+
+      const config = await load({ data, schemaPath });
+
+      expect(config).toMatchObject({
+        database: expect.objectContaining({
+          connectionString: data.databaseConnectionString,
+          poolSize: data.databasePoolSize && parseInt(data.databasePoolSize, 10)
+        }),
+        foobar: expect.objectContaining({
+          username: data.foobarUsername,
+          token: data.foobarToken,
+          uri: data.foobarUri,
+          store: expect.objectContaining({
+            redis: data.foobarStoreRedis
+          })
+        }),
+        redis: undefined
+      });
+    });
+
+    it('should throw error on source with one required field in different case format', async () => {
+      const schemaPath = `test/mocks/json-schema-format-snake-case.yaml`;
+      const data = {
+        custom_key: '100000',
+        database_connection_string: 'http://o.oo',
+        database_pool_size: '9',
+        foobar_token: 'token',
+        foobar_uri: 'https://www.foobar.com/api/v2',
+        foobar_username: 'user',
+        'FOOBAR-STORE-REDIS': 'redis://192.1.1.1/1'
+      };
+
+      const config = async () => load({ schemaPath, data });
+
+      expect(config()).rejects.toThrowError(Error('Invalid configuration'));
+      config().catch((err) => {
+        expect(err).toHaveProperty('errors', expect.arrayContaining([
+          expect.objectContaining({
+            code: 'validation-error',
+            field: 'config.foobar.store'
+          })
+        ]));
+      });
+    });
+  });
+
+  describe('kebab case', () => {
+    it('should load config from process.env object', async () => {
+      const schemaPath = `test/mocks/json-schema-format-kebab-case.yaml`;
+      process.env = {
+        ...process.env,
+        'custom-key': '100000',
+        'database-connection-string': 'http://o.oo',
+        'database-pool-size': '9',
+        'foobar-store-redis': 'redis://192.1.1.1/1',
+        'foobar-timeout-in-ms': '100',
+        'foobar-token': 'token',
+        'foobar-uri': 'https://www.foobar.com/api/v2',
+        'foobar-username': 'user',
+        're-connecting-string': 'redis://192.1.1.1/2',
+        're-connecting-string-2': 'redis://192.1.1.1/3'
+      };
+
+      const config = await loadFromEnvironment({ schemaPath });
+
+      expect(config).toMatchObject({
+        database: expect.objectContaining({
+          connectionString: process.env['database-connection-string'],
+          poolSize: process.env['database-pool-size'] && parseInt(process.env['database-pool-size'] || '', 10)
+        }),
+        foobar: expect.objectContaining({
+          username: process.env['foobar-username'],
+          token: process.env['foobar-token'],
+          uri: process.env['foobar-uri'],
+          timeoutInMs: process.env['foobar-timeout-in-ms'] && parseInt(process.env['foobar-timeout-in-ms'] || '', 10),
+          customKey: 100000,
+          store: expect.objectContaining({
+            redis: process.env['foobar-store-redis'],
+            redisExternal: process.env['re-connecting-string-2']
+          })
+        }),
+        redis: process.env['re-connecting-string']
+      });
+    });
+
+    it('should load config form source', async () => {
+      const schemaPath = `test/mocks/json-schema-format-kebab-case.yaml`;
+      const data = {
+        'custom-key': '100000',
+        'database-connection-string': 'http://o.oo',
+        'database-pool-size': '9',
+        'foobar-token': 'token',
+        'foobar-uri': 'https://www.foobar.com/api/v2',
+        'foobar-username': 'user',
+        'foobar-store-redis': 'redis://192.1.1.1/1'
+      };
+
+      const config = await load({ data, schemaPath });
+
+      expect(config).toMatchObject({
+        database: expect.objectContaining({
+          connectionString: data['database-connection-string'],
+          poolSize: data['database-pool-size'] && parseInt(data['database-pool-size'], 10)
+        }),
+        foobar: expect.objectContaining({
+          username: data['foobar-username'],
+          token: data['foobar-token'],
+          uri: data['foobar-uri'],
+          store: expect.objectContaining({
+            redis: data['foobar-store-redis']
+          })
+        }),
+        redis: undefined
+      });
+    });
+
+    it('should throw error on source with one required field in different case format', async () => {
+      const schemaPath = `test/mocks/json-schema-format-kebab-case.yaml`;
+      const data = {
+        'custom-key': '100000',
+        'database-connection-string': 'http://o.oo',
+        'database-pool-size': '9',
+        'foobar-token': 'token',
+        'foobar-uri': 'https://www.foobar.com/api/v2',
+        'foobar-username': 'user',
+        foobarStoreRedis: 'redis://192.1.1.1/1'
+      };
+
+      const config = async () => load({ schemaPath, data });
+
+      expect(config()).rejects.toThrowError(Error('Invalid configuration'));
+      config().catch((err) => {
+        expect(err).toHaveProperty('errors', expect.arrayContaining([
+          expect.objectContaining({
+            code: 'validation-error',
+            field: 'config.foobar.store'
+          })
+        ]));
+      });
+    });
+  });
+
+  describe('auto', () => {
+    it('should load config from process.env object with mixed cases', async () => {
+      const schemaPath = `test/mocks/json-schema-base.yaml`;
+      process.env = {
+        ...process.env,
+        'custom-key': '100000',
+        databaseConnectionString: 'http://o.oo',
+        DatabasePoolSize: '9',
+        'foobar/store/redis': 'redis://192.1.1.1/1',
+        foobar_timeout_in_ms: '100',
+        foobarToken: 'token',
+        foobarUri: 'https://www.foobar.com/api/v2',
+        foobarUsername: 'user',
+        RECONNECTINGSTRING: 'redis://192.1.1.1/2',
+        reConnectingString_2: 'redis://192.1.1.1/3'
+      };
+
+      const config = await loadFromEnvironment({ schemaPath });
+
+      expect(config).toMatchObject({
+        database: expect.objectContaining({
+          connectionString: process.env.databaseConnectionString,
+          poolSize: process.env.DatabasePoolSize && parseInt(process.env.DatabasePoolSize, 10)
+        }),
+        foobar: expect.objectContaining({
+          username: process.env.foobarUsername,
+          token: process.env.foobarToken,
+          uri: process.env.foobarUri,
+          timeoutInMs: process.env.foobar_timeout_in_ms && parseInt(process.env.foobar_timeout_in_ms, 10),
+          customKey: parseInt(process.env['custom-key'] || '', 10),
+          store: expect.objectContaining({
+            redis: process.env['foobar/store/redis'],
+            redisExternal: process.env.reConnectingString_2
+          })
+        }),
+        redis: process.env.RECONNECTINGSTRING
+      });
+    });
+
+    it('should load config form source with mixed cases', async () => {
+      const schemaPath = `test/mocks/json-schema-base.yaml`;
+      const data = {
+        customKey: '100000',
+        database_connection_string: 'http://o.oo',
+        'database/pool/size': '9',
+        FOOBAR_TOKEN: 'token',
+        FoobarUri: 'https://www.foobar.com/api/v2',
+        'foobar-username': 'user',
+        foobarStoreRedis: 'redis://192.1.1.1/1'
+      };
+
+      const config = await load({ data, schemaPath });
+
+      expect(config).toMatchObject({
+        database: expect.objectContaining({
+          connectionString: data.database_connection_string,
+          poolSize: data['database/pool/size'] && parseInt(data['database/pool/size'], 10)
+        }),
+        foobar: expect.objectContaining({
+          username: data['foobar-username'],
+          token: data.FOOBAR_TOKEN,
+          uri: data.FoobarUri,
+          store: expect.objectContaining({
+            redis: data.foobarStoreRedis
+          })
+        }),
+        redis: undefined
+      });
+    });
+
+    it('should throw error on source with one missing required field', async () => {
+      const schemaPath = `test/mocks/json-schema-base.yaml`;
+      const data = {
+        custom_key: '100000',
+        'database-connection-string': 'http://o.oo',
+        DATABASE_POOL_SIZE: '9',
+        'foobar/token': 'token',
+        foobar_uri: 'https://www.foobar.com/api/v2',
+        foobar_username: 'user'
+      };
+
+      const config = async () => load({ schemaPath, data });
+
+      expect(config()).rejects.toThrowError(Error('Invalid configuration'));
+      config().catch((err) => {
+        expect(err).toHaveProperty('errors', expect.arrayContaining([
+          expect.objectContaining({
+            code: 'validation-error',
+            field: 'config.foobar.store'
+          })
+        ]));
+      });
+    });
+  });
+
+  describe('unknown', () => {
+    it('should load config from process.env object with mixed cases', async () => {
+      const schemaPath = `test/mocks/json-schema-format-unknown.yaml`;
+      process.env = {
+        ...process.env,
+        'custom-key': '100000',
+        databaseConnectionString: 'http://o.oo',
+        DatabasePoolSize: '9',
+        'foobar/store/redis': 'redis://192.1.1.1/1',
+        foobar_timeout_in_ms: '100',
+        foobarToken: 'token',
+        foobarUri: 'https://www.foobar.com/api/v2',
+        foobarUsername: 'user',
+        RECONNECTINGSTRING: 'redis://192.1.1.1/2',
+        reConnectingString_2: 'redis://192.1.1.1/3'
+      };
+
+      const config = await loadFromEnvironment({ schemaPath });
+
+      expect(config).toMatchObject({
+        database: expect.objectContaining({
+          connectionString: process.env.databaseConnectionString,
+          poolSize: process.env.DatabasePoolSize && parseInt(process.env.DatabasePoolSize, 10)
+        }),
+        foobar: expect.objectContaining({
+          username: process.env.foobarUsername,
+          token: process.env.foobarToken,
+          uri: process.env.foobarUri,
+          timeoutInMs: process.env.foobar_timeout_in_ms && parseInt(process.env.foobar_timeout_in_ms, 10),
+          customKey: parseInt(process.env['custom-key'] || '', 10),
+          store: expect.objectContaining({
+            redis: process.env['foobar/store/redis'],
+            redisExternal: process.env.reConnectingString_2
+          })
+        }),
+        redis: process.env.RECONNECTINGSTRING
+      });
+    });
+
+    it('should load config form source with mixed cases', async () => {
+      const schemaPath = `test/mocks/json-schema-format-unknown.yaml`;
+      const data = {
+        customKey: '100000',
+        database_connection_string: 'http://o.oo',
+        databasePoolSize: '9',
+        foobar_token: 'token',
+        FoobarUri: 'https://www.foobar.com/api/v2',
+        foobarUsername: 'user',
+        foobarStoreRedis: 'redis://192.1.1.1/1'
+      };
+
+      const config = await load({ data, schemaPath });
+
+      expect(config).toMatchObject({
+        database: expect.objectContaining({
+          connectionString: data.database_connection_string,
+          poolSize: data.databasePoolSize && parseInt(data.databasePoolSize, 10)
+        }),
+        foobar: expect.objectContaining({
+          username: data.foobarUsername,
+          token: data.foobar_token,
+          uri: data.FoobarUri,
+          store: expect.objectContaining({
+            redis: data.foobarStoreRedis
+          })
+        }),
+        redis: undefined
+      });
+    });
+
+    it('should throw error on source with one missing required field', async () => {
+      const schemaPath = `test/mocks/json-schema-format-unknown.yaml`;
+      const data = {
+        custom_key: '100000',
+        'database-connection-string': 'http://o.oo',
+        DATABASE_POOL_SIZE: '9',
+        'foobar/token': 'token',
+        foobar_uri: 'https://www.foobar.com/api/v2',
+        foobar_username: 'user'
+      };
+
+      const config = async () => load({ schemaPath, data });
+
+      expect(config()).rejects.toThrowError(Error('Invalid configuration'));
+      config().catch((err) => {
+        expect(err).toHaveProperty('errors', expect.arrayContaining([
+          expect.objectContaining({
+            code: 'validation-error',
+            field: 'config.foobar.store'
+          })
+        ]));
+      });
+    });
   });
 });

@@ -1,13 +1,38 @@
-import Ajv, { Options as AjvOptions } from 'ajv';
-import camelCase from 'lodash.camelcase';
 import { ValidationError } from '@g2a/standard-error';
-import jsonschema from 'json-schema-ref-parser';
+import Ajv, { Options as AjvOptions } from 'ajv';
+import jsonschema, { JSONSchema } from 'json-schema-ref-parser';
+import camelCase from 'lodash.camelcase';
+import kebabCase from 'lodash.kebabcase';
+import snakeCase from 'lodash.snakecase';
+
+enum JSON_SCHEMA_KEYS {
+  'sourceFormat' = 'x-sourceFormat',
+  'sourceKey' = 'x-sourceKey'
+}
+
+export const FORMATS = ['camel-case', 'snake-case', 'kebab-case'];
 
 export type LoadParams = {
-  schemaPath: string,
   data: {
     [key: string]: unknown;
-  }
+  },
+  schemaPath: string,
+}
+
+type JSONSchemaWithFormat = JSONSchema & {
+  [JSON_SCHEMA_KEYS.sourceFormat]?: string;
+}
+
+type MapParams = {
+  isAutoCase: boolean;
+  source: object;
+}
+
+type UnflattenParams = {
+  data: Map<string, any>;
+  keyPrefix?: string;
+  schema: JSONSchemaWithFormat;
+  transformCaseFn: (text: string) => string;
 }
 
 /**
@@ -21,9 +46,19 @@ export async function loadFromEnvironment<T> ({ schemaPath }: { schemaPath: stri
  * Loads and validates configuration form data based on provided json schema.
  */
 export async function load<T> ({ schemaPath, data }: LoadParams): Promise<T> {
-  const schema = await jsonschema.dereference(schemaPath);
-  const mappedData = objectToMap(data);
-  const config = unflattenUsingSchema(schema, mappedData);
+  const schema: JSONSchemaWithFormat = await jsonschema.dereference(schemaPath);
+
+  // check if we should fallback to auto case
+  const isAutoCase = !schema[JSON_SCHEMA_KEYS.sourceFormat] || !FORMATS.includes(schema[JSON_SCHEMA_KEYS.sourceFormat] || '');
+
+  // get function that will transform keys
+  const transformCaseFn = getTransformFunction(schema[JSON_SCHEMA_KEYS.sourceFormat]);
+
+  const mappedData = objectToMap({ source: data, isAutoCase });
+
+  // map data from source to json schema format
+  const config = unflattenUsingSchema({ schema, data: mappedData, transformCaseFn });
+
   coerceConfig(schema, config);
   return config;
 }
@@ -34,23 +69,30 @@ export async function load<T> ({ schemaPath, data }: LoadParams): Promise<T> {
  * @param data
  * @param keyPrefix
  */
-function unflattenUsingSchema (schema: jsonschema.JSONSchema, data: Map<string, any>, keyPrefix: string = ''): any {
+function unflattenUsingSchema ({ schema, data, keyPrefix = '', transformCaseFn }: UnflattenParams): any {
   if (schema.type === 'object') {
     return Object.entries(schema.properties || {})
-      .map(([k, v]) => {
+      .map(([propertyKey, propertyValue]) => {
         // create key with prefix (for nested objects)
-        const key = camelCase(`${keyPrefix}_${k}`);
+        const key = transformCaseFn(`${keyPrefix}_${propertyKey}`);
+        const sourceKey = transformCaseFn(propertyValue[JSON_SCHEMA_KEYS.sourceKey]);
 
-        // if property has x-sourceKey then get value by it if not try to get value by key
-        const value = v['x-sourceKey'] ? data.get(camelCase(v['x-sourceKey'])) : data.get(key);
+        // if property has sourceKey then get value by it if not try to get value by key
+        const value = propertyValue[JSON_SCHEMA_KEYS.sourceKey] ? data.get(sourceKey) : data.get(key);
 
         // truthy value means that we have value for this property and no need to go deeper
         if (value !== undefined) {
-          return [k, value];
+          return [propertyKey, value];
         }
 
         // if object, dig down until we will be able to get value
-        return [k, unflattenUsingSchema(v, data, key)];
+        const nestedValue = unflattenUsingSchema({
+          schema: propertyValue,
+          data,
+          keyPrefix: key,
+          transformCaseFn
+        });
+        return [propertyKey, nestedValue];
       })
       .reduce((acc, [k, v]) => ({
         ...acc,
@@ -81,11 +123,28 @@ function coerceConfig (schema: object, data: object, ajvOpts: AjvOptions = {}): 
 }
 
 /**
+ * getTransformFunction return proper transformation function for key
+ * @param format
+ */
+function getTransformFunction (format: string | undefined): any {
+  switch (format) {
+    case FORMATS[1]:
+      return snakeCase;
+    case FORMATS[2]:
+      return kebabCase;
+    case FORMATS[0]:
+    default:
+      return camelCase;
+  }
+}
+
+/**
  * objectToMap iterates over entries and return Map
  * @param source
  */
-function objectToMap (source: object): Map<string, any> {
+function objectToMap ({ source, isAutoCase = true }: MapParams): Map<string, any> {
+  const transformFn = isAutoCase ? camelCase : (x: string) => x;
   return Object
     .entries(source)
-    .reduce((acc, [k, v]) => acc.set(camelCase(k), v), new Map());
+    .reduce((acc, [k,v]) => acc.set(transformFn(k), v), new Map());
 }

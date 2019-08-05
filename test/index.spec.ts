@@ -231,8 +231,51 @@ describe('config', function () {
     };
 
     const config = async () => load({ schemaPath, data });
+    const resp = config();
+    expect(resp).rejects.toHaveProperty('code', 'validation-error');
+    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
+    expect(resp).rejects.toHaveProperty('message', 'Invalid configuration');
+    expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
+      expect.objectContaining({
+        message: 'config.foobar should have required property \'uri\'',
+        code: 'validation-error',
+        field: 'config.foobar'
+      })
+    ]));
+  });
 
-    expect(config()).rejects.toThrowError(Error('Invalid configuration'));
+  it('should throw error on load config from source object (missing all fields)', async () => {
+    const schemaPath = `test/mocks/json-schema-base.yaml`;
+    const data = {};
+
+    const config = async () => load({ schemaPath, data });
+    const resp = config();
+    expect(resp).rejects.toHaveProperty('code', 'validation-error');
+    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
+    expect(resp).rejects.toHaveProperty('message', 'Invalid configuration');
+    expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
+      expect.objectContaining({
+        message: 'config.foobar should have required property \'username\'',
+        code: 'validation-error',
+        field: 'config.foobar'
+      }),
+      expect.objectContaining({
+        message: 'config.foobar should have required property \'token\'',
+        code: 'validation-error',
+        field: 'config.foobar'
+      }),
+      expect.objectContaining({
+        message: 'config.foobar should have required property \'uri\'',
+        code: 'validation-error',
+        field: 'config.foobar'
+      }),
+      expect.objectContaining({
+        message:
+          'config.foobar.store should have required property \'redis\'',
+        code: 'validation-error',
+        field: 'config.foobar.store'
+      })
+    ]));
   });
 
   it('should throw error on root element type different then object', async () => {
@@ -291,7 +334,7 @@ describe('format', () => {
       });
     });
 
-    it('should load config with form source', async () => {
+    it('should load config form source', async () => {
       const schemaPath = `test/mocks/json-schema-format-snake-case.yaml`;
       const data = {
         custom_key: '100000',

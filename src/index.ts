@@ -19,7 +19,7 @@ export type LoadParams = {
   schemaPath: string,
 }
 
-type JSONSchemaWithFormat = JSONSchema & {
+export type JSONSchemaWithFormat = JSONSchema & {
   [JSON_SCHEMA_KEYS.sourceFormat]?: string;
 }
 
@@ -146,5 +146,5 @@ function objectToMap ({ source, isAutoCase = true }: MapParams): Map<string, any
   const transformFn = isAutoCase ? camelCase : (x: string) => x;
   return Object
     .entries(source)
-    .reduce((acc, [k,v]) => acc.set(transformFn(k), v), new Map());
+    .reduce((acc, [k, v]) => acc.set(transformFn(k), v), new Map());
 }

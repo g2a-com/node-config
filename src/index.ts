@@ -6,7 +6,7 @@ import jsonschema from 'json-schema-ref-parser';
 export type LoadParams = {
   schemaPath: string,
   data: {
-    [key: string]: any;
+    [key: string]: unknown;
   }
 }
 

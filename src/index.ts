@@ -10,7 +10,15 @@ enum JSON_SCHEMA_KEYS {
   'sourceKey' = 'x-sourceKey'
 }
 
-export const FORMATS = ['camel-case', 'snake-case', 'kebab-case'];
+export const TRANSFORM_FUNCTIONS: {
+  [k: string]: (text?: string) => string
+} = {
+  'camel-case': camelCase,
+  'snake-case': snakeCase,
+  'kebab-case': kebabCase
+};
+
+export const FORMATS = Object.keys(TRANSFORM_FUNCTIONS);
 
 export type LoadParams = {
   data: {
@@ -123,19 +131,20 @@ function coerceConfig (schema: object, data: object, ajvOpts: AjvOptions = {}): 
 }
 
 /**
- * getTransformFunction return proper transformation function for key
+ *  return proper transformation function for key
  * @param format
  */
-function getTransformFunction (format: string | undefined): any {
-  switch (format) {
-    case FORMATS[1]:
-      return snakeCase;
-    case FORMATS[2]:
-      return kebabCase;
-    case FORMATS[0]:
-    default:
-      return camelCase;
+function getTransformFunction (format: string | undefined): (text: string | undefined) => string {
+  if (!format) {
+    return camelCase;
   }
+
+  const transformFn = TRANSFORM_FUNCTIONS[format];
+  if (transformFn) {
+    return transformFn;
+  }
+
+  return camelCase;
 }
 
 /**

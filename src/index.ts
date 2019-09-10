@@ -31,16 +31,16 @@ export type JSONSchemaWithFormat = JSONSchema & {
   [JSON_SCHEMA_KEYS.sourceFormat]?: string;
 }
 
-type MapParams = {
-  isAutoCase: boolean;
-  source: object;
-}
-
 type UnflattenParams = {
   data: Map<string, any>;
   keyPrefix?: string;
   schema: JSONSchemaWithFormat;
   transformCaseFn: (text: string) => string;
+}
+
+type MapParams = {
+  transformCaseFn: UnflattenParams['transformCaseFn'];
+  source: object;
 }
 
 /**
@@ -56,13 +56,10 @@ export async function loadFromEnvironment<T> ({ schemaPath }: { schemaPath: stri
 export async function load<T> ({ schemaPath, data }: LoadParams): Promise<T> {
   const schema: JSONSchemaWithFormat = await jsonschema.dereference(schemaPath);
 
-  // check if we should fallback to auto case
-  const isAutoCase = !schema[JSON_SCHEMA_KEYS.sourceFormat] || !FORMATS.includes(schema[JSON_SCHEMA_KEYS.sourceFormat] || '');
-
   // get function that will transform keys
   const transformCaseFn = getTransformFunction(schema[JSON_SCHEMA_KEYS.sourceFormat]);
 
-  const mappedData = objectToMap({ source: data, isAutoCase });
+  const mappedData = objectToMap({ source: data, transformCaseFn });
 
   // map data from source to json schema format
   const config = unflattenUsingSchema({ schema, data: mappedData, transformCaseFn });
@@ -151,9 +148,8 @@ function getTransformFunction (format: string | undefined): (text: string | unde
  * objectToMap iterates over entries and return Map
  * @param source
  */
-function objectToMap ({ source, isAutoCase = true }: MapParams): Map<string, any> {
-  const transformFn = isAutoCase ? camelCase : (x: string) => x;
+function objectToMap ({ source, transformCaseFn }: MapParams): Map<string, any> {
   return Object
     .entries(source)
-    .reduce((acc, [k, v]) => acc.set(transformFn(k), v), new Map());
+    .reduce((acc, [k, v]) => acc.set(transformCaseFn(k), v), new Map());
 }

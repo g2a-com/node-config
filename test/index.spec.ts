@@ -366,13 +366,11 @@ describe('format', () => {
       });
     });
 
-    it('should throw error on source with one required field in different case format', async () => {
+    it('should throw error on source with missing one required field', async () => {
       const schemaPath = `test/mocks/json-schema-format-snake-case.yaml`;
       const data = {
-        custom_key: '100000',
         database_connection_string: 'http://o.oo',
         database_pool_size: '9',
-        foobar_token: 'token',
         foobar_uri: 'https://www.foobar.com/api/v2',
         foobar_username: 'user',
         'FOOBAR-STORE-REDIS': 'redis://192.1.1.1/1'
@@ -381,11 +379,13 @@ describe('format', () => {
       const config = async () => load({ schemaPath, data });
 
       expect(config()).rejects.toThrowError(Error('Invalid configuration'));
+
       config().catch((err) => {
         expect(err).toHaveProperty('errors', expect.arrayContaining([
           expect.objectContaining({
             code: 'validation-error',
-            field: 'config.foobar.store'
+            field: 'config.foobar',
+            data: expect.objectContaining({ missingProperty: 'token' })
           })
         ]));
       });
@@ -461,31 +461,6 @@ describe('format', () => {
         redis: undefined
       });
     });
-
-    it('should throw error on source with one required field in different case format', async () => {
-      const schemaPath = `test/mocks/json-schema-format-snake-case.yaml`;
-      const data = {
-        custom_key: '100000',
-        database_connection_string: 'http://o.oo',
-        database_pool_size: '9',
-        foobar_token: 'token',
-        foobar_uri: 'https://www.foobar.com/api/v2',
-        foobar_username: 'user',
-        'FOOBAR-STORE-REDIS': 'redis://192.1.1.1/1'
-      };
-
-      const config = async () => load({ schemaPath, data });
-
-      expect(config()).rejects.toThrowError(Error('Invalid configuration'));
-      config().catch((err) => {
-        expect(err).toHaveProperty('errors', expect.arrayContaining([
-          expect.objectContaining({
-            code: 'validation-error',
-            field: 'config.foobar.store'
-          })
-        ]));
-      });
-    });
   });
 
   describe('kebab case', () => {
@@ -557,31 +532,6 @@ describe('format', () => {
         redis: undefined
       });
     });
-
-    it('should throw error on source with one required field in different case format', async () => {
-      const schemaPath = `test/mocks/json-schema-format-kebab-case.yaml`;
-      const data = {
-        'custom-key': '100000',
-        'database-connection-string': 'http://o.oo',
-        'database-pool-size': '9',
-        'foobar-token': 'token',
-        'foobar-uri': 'https://www.foobar.com/api/v2',
-        'foobar-username': 'user',
-        foobarStoreRedis: 'redis://192.1.1.1/1'
-      };
-
-      const config = async () => load({ schemaPath, data });
-
-      expect(config()).rejects.toThrowError(Error('Invalid configuration'));
-      config().catch((err) => {
-        expect(err).toHaveProperty('errors', expect.arrayContaining([
-          expect.objectContaining({
-            code: 'validation-error',
-            field: 'config.foobar.store'
-          })
-        ]));
-      });
-    });
   });
 
   describe('auto', () => {
@@ -597,7 +547,7 @@ describe('format', () => {
         foobarToken: 'token',
         foobarUri: 'https://www.foobar.com/api/v2',
         foobarUsername: 'user',
-        RECONNECTINGSTRING: 'redis://192.1.1.1/2',
+        RE_CONNECTING_STRING: 'redis://192.1.1.1/2',
         reConnectingString_2: 'redis://192.1.1.1/3'
       };
 
@@ -619,7 +569,7 @@ describe('format', () => {
             redisExternal: process.env.reConnectingString_2
           })
         }),
-        redis: process.env.RECONNECTINGSTRING
+        redis: process.env.RE_CONNECTING_STRING
       });
     });
 
@@ -692,7 +642,7 @@ describe('format', () => {
         foobarToken: 'token',
         foobarUri: 'https://www.foobar.com/api/v2',
         foobarUsername: 'user',
-        RECONNECTINGSTRING: 'redis://192.1.1.1/2',
+        RE_CONNECTING_STRING: 'redis://192.1.1.1/2',
         reConnectingString_2: 'redis://192.1.1.1/3'
       };
 
@@ -714,7 +664,7 @@ describe('format', () => {
             redisExternal: process.env.reConnectingString_2
           })
         }),
-        redis: process.env.RECONNECTINGSTRING
+        redis: process.env.RE_CONNECTING_STRING
       });
     });
 

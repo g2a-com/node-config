@@ -1,5 +1,9 @@
+import fs from 'fs';
 import 'jest';
-import { load, loadFromEnvironment } from './../src/index';
+import path from 'path';
+import { load, loadBySchema, loadFromEnvironment } from './../src/index';
+
+const BASE_JSON_SCHEMA = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'mocks', 'json-schema-base.json')).toString());
 
 describe('config', function () {
   it('should load config from process.env object (camel case)', async () => {
@@ -291,6 +295,70 @@ describe('config', function () {
 
     const config = async () => load({ schemaPath, data });
     expect(config()).rejects.toThrowError(Error('Invalid configuration'));
+  });
+});
+
+describe('loadBySchema', () => {
+  it('should load config from data by provided schema', async () => {
+    const data = {
+      customKey: '100000',
+      databaseConnectionString: 'http://o.oo',
+      databasePoolSize: '9',
+      foobarStoreRedis: 'redis://192.1.1.1/1',
+      foobarTimeoutInMs: '100',
+      foobarToken: 'token',
+      foobarUri: 'https://www.foobar.com/api/v2',
+      foobarUsername: 'user',
+      reConnectingString: 'redis://192.1.1.1/2',
+      reConnectingString2: 'redis://192.1.1.1/3'
+    };
+
+    const config = await loadBySchema({ schema: BASE_JSON_SCHEMA, data });
+
+    expect(config).toMatchObject({
+      database: expect.objectContaining({
+        connectionString: data.databaseConnectionString,
+        poolSize: data.databasePoolSize && parseInt(data.databasePoolSize, 10)
+      }),
+      foobar: expect.objectContaining({
+        username: data.foobarUsername,
+        token: data.foobarToken,
+        uri: data.foobarUri,
+        timeoutInMs: data.foobarTimeoutInMs && parseInt(data.foobarTimeoutInMs, 10),
+        customKey: 100000,
+        store: expect.objectContaining({
+          redis: data.foobarStoreRedis,
+          redisExternal: data.reConnectingString2
+        })
+      }),
+      redis: data.reConnectingString,
+      isEnabled: true
+    });
+  });
+
+  it('should throw error on load config from source object (missing required field)', async () => {
+    const data = {
+      customKey: '100000',
+      databaseConnectionString: 'http://o.oo',
+      databasePoolSize: '9',
+      foobarStoreRedis: 'redis://192.1.1.1/1',
+      foobarTimeoutInMs: '100',
+      foobarToken: 'token',
+      foobarUsername: 'user'
+    };
+
+    const config = async () => loadBySchema({ schema: BASE_JSON_SCHEMA, data });
+    const resp = config();
+    expect(resp).rejects.toHaveProperty('code', 'validation-error');
+    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
+    expect(resp).rejects.toHaveProperty('message', 'Invalid configuration');
+    expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
+      expect.objectContaining({
+        message: 'config.foobar should have required property \'uri\'',
+        code: 'validation-error',
+        field: 'config.foobar'
+      })
+    ]));
   });
 });
 

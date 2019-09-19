@@ -27,6 +27,13 @@ export type LoadParams = {
   schemaPath: string,
 }
 
+export type LoadBySchemaParams = {
+  data: {
+    [key: string]: unknown;
+  },
+  schema: JSONSchemaWithFormat,
+}
+
 export type JSONSchemaWithFormat = JSONSchema & {
   [JSON_SCHEMA_KEYS.sourceFormat]?: string;
 }
@@ -55,7 +62,13 @@ export async function loadFromEnvironment<T> ({ schemaPath }: { schemaPath: stri
  */
 export async function load<T> ({ schemaPath, data }: LoadParams): Promise<T> {
   const schema: JSONSchemaWithFormat = await jsonschema.dereference(schemaPath);
+  return loadBySchema({ schema, data });
+}
 
+/**
+ * Loads and validates configuration form data based on already provided json schema.
+ */
+export async function loadBySchema<T> ({ schema, data }: LoadBySchemaParams): Promise<T> {
   // get function that will transform keys
   const transformCaseFn = getTransformFunction(schema[JSON_SCHEMA_KEYS.sourceFormat]);
 

@@ -1,8 +1,10 @@
 import { ValidationError } from '@g2a/standard-error';
-import Ajv, { Options as AjvOptions } from 'ajv';
+import Ajv, { ErrorObject, Options as AjvOptions } from 'ajv';
 import jsonschema, { JSONSchema } from 'json-schema-ref-parser';
 import camelCase from 'lodash.camelcase';
+import get from 'lodash.get';
 import kebabCase from 'lodash.kebabcase';
+import merge from 'lodash.merge';
 import snakeCase from 'lodash.snakecase';
 
 enum JSON_SCHEMA_KEYS {
@@ -124,18 +126,25 @@ function coerceConfig (schema: object, data: object, ajvOpts: AjvOptions = {}): 
     allErrors: true,
     useDefaults: true,
     coerceTypes: true,
+    verbose: true,
     ...ajvOpts
   });
 
   const isValid = ajv.validate(schema, data);
 
-  if (!isValid) {
-    throw new ValidationError('Invalid configuration', {
-      errors: (ajv.errors || []).map(err => ({
-        message: `config${err.dataPath} ${err.message}`,
-        field: `config${err.dataPath}`,
-        data: err.params
-      }))
+  if (!isValid && ajv.errors) {
+    // enrich errors for proper main message
+    const enrichedErrors = ajv.errors.map((err) => enrichErrorMessage(err));
+
+    throw new ValidationError(ajv.errorsText(enrichedErrors) || 'Invalid configuration', {
+      errors: (ajv.errors || []).map((err) => {
+        const enrichedError = enrichErrorMessage(err);
+        return {
+          message: ajv.errorsText([enrichedError]),
+          field: `data${enrichedError.dataPath}`,
+          data: enrichedError.params
+        };
+      })
     });
   }
 }
@@ -165,4 +174,23 @@ function objectToMap ({ source, transformCaseFn }: MapParams): Map<string, any> 
   return Object
     .entries(source)
     .reduce((acc, [k, v]) => acc.set(transformCaseFn(k), v), new Map());
+}
+
+function enrichErrorMessage (err: Ajv.ErrorObject): ErrorObject {
+  // create deep copy of err object to not mutate later
+  const error = merge({}, err);
+
+  Object.entries(error.params).forEach(([key, value]: [string, any]) => {
+    let propertySchema: object | undefined = error.parentSchema;
+
+    if (error.keyword === 'required') {
+      propertySchema = get(error.parentSchema, `properties.${value}`);
+    }
+
+    const sourceKey = get(propertySchema, JSON_SCHEMA_KEYS.sourceKey);
+    if (sourceKey && error.message) {
+      error.message = `${error.message} with source key: "${sourceKey}"`;
+    }
+  });
+  return error;
 }

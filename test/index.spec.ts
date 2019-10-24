@@ -222,32 +222,6 @@ describe('config', function () {
     });
   });
 
-  it('should throw error on load config from source object (missing required field)', async () => {
-    const schemaPath = `test/mocks/json-schema-base.yaml`;
-    const data = {
-      customKey: '100000',
-      databaseConnectionString: 'http://o.oo',
-      databasePoolSize: '9',
-      foobarStoreRedis: 'redis://192.1.1.1/1',
-      foobarTimeoutInMs: '100',
-      foobarToken: 'token',
-      foobarUsername: 'user'
-    };
-
-    const config = async () => load({ schemaPath, data });
-    const resp = config();
-    expect(resp).rejects.toHaveProperty('code', 'validation-error');
-    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
-    expect(resp).rejects.toHaveProperty('message', 'Invalid configuration');
-    expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
-      expect.objectContaining({
-        message: 'config.foobar should have required property \'uri\'',
-        code: 'validation-error',
-        field: 'config.foobar'
-      })
-    ]));
-  });
-
   it('should throw error on load config from source object (missing all fields)', async () => {
     const schemaPath = `test/mocks/json-schema-base.yaml`;
     const data = {};
@@ -256,28 +230,27 @@ describe('config', function () {
     const resp = config();
     expect(resp).rejects.toHaveProperty('code', 'validation-error');
     expect(resp).rejects.toHaveProperty('name', 'ValidationError');
-    expect(resp).rejects.toHaveProperty('message', 'Invalid configuration');
+    expect(resp).rejects.toHaveProperty('message', `data.foobar should have required property 'username', data.foobar should have required property 'token', data.foobar should have required property 'uri', data.foobar.store should have required property 'redis'`);
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: 'config.foobar should have required property \'username\'',
+        message: `data.foobar should have required property 'username'`,
         code: 'validation-error',
-        field: 'config.foobar'
+        field: 'data.foobar'
       }),
       expect.objectContaining({
-        message: 'config.foobar should have required property \'token\'',
+        message: `data.foobar should have required property 'token'`,
         code: 'validation-error',
-        field: 'config.foobar'
+        field: 'data.foobar'
       }),
       expect.objectContaining({
-        message: 'config.foobar should have required property \'uri\'',
+        message: `data.foobar should have required property 'uri'`,
         code: 'validation-error',
-        field: 'config.foobar'
+        field: 'data.foobar'
       }),
       expect.objectContaining({
-        message:
-          'config.foobar.store should have required property \'redis\'',
+        message: `data.foobar.store should have required property 'redis'`,
         code: 'validation-error',
-        field: 'config.foobar.store'
+        field: 'data.foobar.store'
       })
     ]));
   });
@@ -294,7 +267,147 @@ describe('config', function () {
     };
 
     const config = async () => load({ schemaPath, data });
-    expect(config()).rejects.toThrowError(Error('Invalid configuration'));
+    expect(config()).rejects.toThrowError(Error('data should be array'));
+  });
+});
+
+describe('error message', () => {
+  const schemaPath = `test/mocks/json-schema-error-messages.yaml`;
+
+  it('should tells us that field is required', async () => {
+    const data = {
+      customKey: '100000',
+      databaseConnectionString: 'http://o.oo',
+      databasePoolSize: '9',
+      foobarStoreRedis: 'redis://192.1.1.1/1',
+      foobarTimeoutInMs: '100',
+      foobarToken: 'token',
+      foobarUsername: 'user'
+    };
+
+    const config = async () => load({ schemaPath, data });
+    const resp = config();
+    expect(resp).rejects.toHaveProperty('code', 'validation-error');
+    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
+    expect(resp).rejects.toHaveProperty('message', `data.foobar should have required property 'uri' with source key: "g2a-foobar-uri"`);
+    expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
+      expect.objectContaining({
+        message: `data.foobar should have required property 'uri' with source key: "g2a-foobar-uri"`,
+        code: 'validation-error',
+        field: 'data.foobar'
+      })
+    ]));
+  });
+
+  it('should tells us that format is wrong', async () => {
+    const data = {
+      customKey: '100000',
+      databaseConnectionString: 'http://o.oo',
+      databasePoolSize: '9',
+      foobarStoreRedis: 'redis://192.1.1.1/1',
+      foobarTimeoutInMs: '100',
+      foobarToken: 'token',
+      foobarUsername: 'user',
+      'g2a-foobar-uri': 123
+    };
+
+    const config = async () => load({ schemaPath, data });
+    const resp = config();
+    expect(resp).rejects.toHaveProperty('code', 'validation-error');
+    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
+    expect(resp).rejects.toHaveProperty('message', `data.foobar.uri should match format "uri" with source key: "g2a-foobar-uri"`);
+    expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
+      expect.objectContaining({
+        message: `data.foobar.uri should match format "uri" with source key: "g2a-foobar-uri"`,
+        code: 'validation-error',
+        field: 'data.foobar.uri'
+      })
+    ]));
+  });
+
+  it('should tells us that format (number with x-sourceKey) is wrong', async () => {
+    const data = {
+      customKey: '100000',
+      databaseConnectionString: 'http://o.oo',
+      databasePoolSize: '9',
+      foobarStoreRedis: 'redis://192.1.1.1/1',
+      CUSTOM_KEY: '----',
+      foobarToken: 'token',
+      foobarUsername: 'user',
+      'g2a-foobar-uri': 'http://g2a.com'
+    };
+
+    const config = async () => load({ schemaPath, data });
+    const resp = config();
+    expect(resp).rejects.toHaveProperty('code', 'validation-error');
+    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
+    expect(resp).rejects.toHaveProperty('message', `data.foobar.customKey should be number with source key: "CUSTOM_KEY"`);
+    expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
+      expect.objectContaining({
+        message: `data.foobar.customKey should be number with source key: "CUSTOM_KEY"`,
+        code: 'validation-error',
+        field: 'data.foobar.customKey'
+      })
+    ]));
+  });
+
+  it('should tells us that format (number) is wrong', async () => {
+    const data = {
+      customKey: '100000',
+      databaseConnectionString: 'http://o.oo',
+      databasePoolSize: '9',
+      foobarStoreRedis: 'redis://192.1.1.1/1',
+      CUSTOM_KEY: '----',
+      foobarToken: 'token',
+      foobarUsername: 'user',
+      'g2a-foobar-uri': 'http://g2a.com'
+    };
+
+    const config = async () => load({ schemaPath, data });
+    const resp = config();
+    expect(resp).rejects.toHaveProperty('code', 'validation-error');
+    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
+    expect(resp).rejects.toHaveProperty('message', `data.foobar.customKey should be number with source key: "CUSTOM_KEY"`);
+    expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
+      expect.objectContaining({
+        message: `data.foobar.customKey should be number with source key: "CUSTOM_KEY"`,
+        code: 'validation-error',
+        field: 'data.foobar.customKey'
+      })
+    ]));
+  });
+
+  it('should tells us that fields are missing in array', async () => {
+    const data = {
+    };
+
+    const config = async () => load({ schemaPath, data });
+    const resp = config();
+    expect(resp).rejects.toHaveProperty('code', 'validation-error');
+    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
+    expect(resp).rejects.toHaveProperty('message', `data.foobar should have required property 'username', data.foobar should have required property 'token', data.foobar should have required property 'uri' with source key: "g2a-foobar-uri", data.foobar.store should have required property 'redis'`);
+    expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
+      expect.objectContaining({
+        message: `data.foobar should have required property 'username'`,
+        code: 'validation-error',
+        field: 'data.foobar'
+      }),
+      expect.objectContaining({
+        message: `data.foobar should have required property 'token'`,
+        code: 'validation-error',
+        field: 'data.foobar'
+      }),
+      expect.objectContaining({
+        message: `data.foobar should have required property 'uri' with source key: "g2a-foobar-uri"`,
+        code: 'validation-error',
+        field: 'data.foobar'
+      }),
+      expect.objectContaining({
+        message: `data.foobar.store should have required property 'redis'`,
+        code: 'validation-error',
+        field: 'data.foobar.store'
+      })
+    ]));
   });
 });
 
@@ -351,12 +464,12 @@ describe('loadBySchema', () => {
     const resp = config();
     expect(resp).rejects.toHaveProperty('code', 'validation-error');
     expect(resp).rejects.toHaveProperty('name', 'ValidationError');
-    expect(resp).rejects.toHaveProperty('message', 'Invalid configuration');
+    expect(resp).rejects.toHaveProperty('message', `data.foobar should have required property 'uri'`);
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: 'config.foobar should have required property \'uri\'',
+        message: `data.foobar should have required property 'uri'`,
         code: 'validation-error',
-        field: 'config.foobar'
+        field: 'data.foobar'
       })
     ]));
   });
@@ -446,13 +559,13 @@ describe('format', () => {
 
       const config = async () => load({ schemaPath, data });
 
-      expect(config()).rejects.toThrowError(Error('Invalid configuration'));
+      expect(config()).rejects.toThrowError(Error(`data.foobar should have required property 'token'`));
 
       config().catch((err) => {
         expect(err).toHaveProperty('errors', expect.arrayContaining([
           expect.objectContaining({
             code: 'validation-error',
-            field: 'config.foobar',
+            field: 'data.foobar',
             data: expect.objectContaining({ missingProperty: 'token' })
           })
         ]));
@@ -685,12 +798,12 @@ describe('format', () => {
 
       const config = async () => load({ schemaPath, data });
 
-      expect(config()).rejects.toThrowError(Error('Invalid configuration'));
+      expect(config()).rejects.toThrowError(Error(`data.foobar.store should have required property 'redis'`));
       config().catch((err) => {
         expect(err).toHaveProperty('errors', expect.arrayContaining([
           expect.objectContaining({
             code: 'validation-error',
-            field: 'config.foobar.store'
+            field: 'data.foobar.store'
           })
         ]));
       });
@@ -780,12 +893,12 @@ describe('format', () => {
 
       const config = async () => load({ schemaPath, data });
 
-      expect(config()).rejects.toThrowError(Error('Invalid configuration'));
+      expect(config()).rejects.toThrowError(Error(`data.foobar.store should have required property 'redis'`));
       config().catch((err) => {
         expect(err).toHaveProperty('errors', expect.arrayContaining([
           expect.objectContaining({
             code: 'validation-error',
-            field: 'config.foobar.store'
+            field: 'data.foobar.store'
           })
         ]));
       });

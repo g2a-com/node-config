@@ -137,14 +137,11 @@ function coerceConfig (schema: object, data: object, ajvOpts: AjvOptions = {}): 
     const enrichedErrors = ajv.errors.map((err) => enrichErrorMessage(err));
 
     throw new ValidationError(ajv.errorsText(enrichedErrors) || 'Invalid configuration', {
-      errors: (ajv.errors || []).map((err) => {
-        const enrichedError = enrichErrorMessage(err);
-        return {
-          message: ajv.errorsText([enrichedError]),
-          field: `data${enrichedError.dataPath}`,
-          data: enrichedError.params
-        };
-      })
+      errors: (enrichedErrors).map((err) => ({
+        message: ajv.errorsText([err]),
+        field: `data${err.dataPath}`,
+        data: err.params
+      }))
     });
   }
 }

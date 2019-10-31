@@ -1,13 +1,15 @@
-import fs from 'fs';
-import 'jest';
-import path from 'path';
-import { load, loadBySchema, loadFromEnvironment } from './../src/index';
+/* eslint-env jest */
 
-const BASE_JSON_SCHEMA = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'mocks', 'json-schema-base.json')).toString());
+import fs from 'fs'
+import 'jest'
+import path from 'path'
+import { load, loadBySchema, loadFromEnvironment } from './../src/index'
+
+const BASE_JSON_SCHEMA = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'mocks', 'json-schema-base.json')).toString())
 
 describe('config', function () {
   it('should load config from process.env object (camel case)', async () => {
-    const schemaPath = `test/mocks/json-schema-base.yaml`;
+    const schemaPath = 'test/mocks/json-schema-base.yaml'
     process.env = {
       ...process.env,
       customKey: '100000',
@@ -20,9 +22,9 @@ describe('config', function () {
       foobarUsername: 'user',
       reConnectingString: 'redis://192.1.1.1/2',
       reConnectingString2: 'redis://192.1.1.1/3'
-    };
+    }
 
-    const config = await loadFromEnvironment({ schemaPath });
+    const config = await loadFromEnvironment({ schemaPath })
 
     expect(config).toMatchObject({
       database: expect.objectContaining({
@@ -42,11 +44,11 @@ describe('config', function () {
       }),
       redis: process.env.reConnectingString,
       isEnabled: true
-    });
-  });
+    })
+  })
 
   it('should load config (with sourceKey) from process.env object (camel case)', async () => {
-    const schemaPath = `test/mocks/json-schema-base.yaml`;
+    const schemaPath = 'test/mocks/json-schema-base.yaml'
     process.env = {
       ...process.env,
       customKey: '100000',
@@ -59,9 +61,9 @@ describe('config', function () {
       foobarUsername: 'user',
       reConnectingString: 'redis://192.1.1.1/2',
       reConnectingString2: 'redis://192.1.1.1/3'
-    };
+    }
 
-    const config = await loadFromEnvironment({ schemaPath });
+    const config = await loadFromEnvironment({ schemaPath })
 
     expect(config).toMatchObject({
       redis: process.env.reConnectingString,
@@ -72,11 +74,11 @@ describe('config', function () {
           redisExternal: process.env.reConnectingString2
         })
       })
-    });
-  });
+    })
+  })
 
   it('should load config (with sourceKey) from source (camel case)', async () => {
-    const schemaPath = `test/mocks/json-schema-base.yaml`;
+    const schemaPath = 'test/mocks/json-schema-base.yaml'
     const data = {
       customKey: '100000',
       databaseConnectionString: 'http://o.oo',
@@ -88,9 +90,9 @@ describe('config', function () {
       foobarUsername: 'user',
       reConnectingString: 'redis://192.1.1.1/2',
       reConnectingString2: 'redis://192.1.1.1/3'
-    };
+    }
 
-    const config = await load({ schemaPath, data });
+    const config = await load({ schemaPath, data })
 
     expect(config).toMatchObject({
       database: expect.objectContaining({
@@ -110,11 +112,11 @@ describe('config', function () {
       }),
       redis: data.reConnectingString,
       isEnabled: true
-    });
-  });
+    })
+  })
 
   it('should load config as json schema from source object with false, 0 and undefined values (camel case)', async () => {
-    const schemaPath = `test/mocks/json-schema-base.yaml`;
+    const schemaPath = 'test/mocks/json-schema-base.yaml'
     const data = {
       customKey: 0,
       databaseConnectionString: 'http://o.oo',
@@ -127,9 +129,9 @@ describe('config', function () {
       reConnectingString: 'redis://192.1.1.1/2',
       reConnectingString2: undefined,
       isEnabled: false
-    };
+    }
 
-    const config = await load({ schemaPath, data });
+    const config = await load({ schemaPath, data })
 
     expect(config).toMatchObject({
       database: expect.objectContaining({
@@ -149,11 +151,11 @@ describe('config', function () {
       }),
       redis: data.reConnectingString,
       isEnabled: false
-    });
-  });
+    })
+  })
 
   it('should load config from source (upper case)', async () => {
-    const schemaPath = `test/mocks/json-schema-base.yaml`;
+    const schemaPath = 'test/mocks/json-schema-base.yaml'
     const data = {
       CUSTOM_KEY: '100000',
       DATABASE_CONNECTION_STRING: 'http://o.oo',
@@ -165,9 +167,9 @@ describe('config', function () {
       FOOBAR_USERNAME: 'user',
       RE_CONNECTING_STRING: 'redis://192.1.1.1/2',
       RE_CONNECTING_STRING2: 'redis://192.1.1.1/3'
-    };
+    }
 
-    const config = await load({ schemaPath, data });
+    const config = await load({ schemaPath, data })
 
     expect(config).toMatchObject({
       database: expect.objectContaining({
@@ -187,11 +189,11 @@ describe('config', function () {
       }),
       redis: data.RE_CONNECTING_STRING,
       isEnabled: true
-    });
-  });
+    })
+  })
 
   it('should not throw error on load config from source object (missing non required field)', async () => {
-    const schemaPath = `test/mocks/json-schema-base.yaml`;
+    const schemaPath = 'test/mocks/json-schema-base.yaml'
     const data = {
       CUSTOM_KEY: '100000',
       DATABASE_CONNECTION_STRING: 'http://o.oo',
@@ -201,9 +203,9 @@ describe('config', function () {
       FOOBAR_URI: 'https://www.foobar.com/api/v2',
       FOOBAR_USERNAME: 'user',
       RE_CONNECTING_STRING: 'redis://192.1.1.1/2'
-    };
+    }
 
-    const config = await load({ schemaPath, data });
+    const config = await load({ schemaPath, data })
 
     expect(config).toMatchObject({
       database: expect.objectContaining({
@@ -219,44 +221,44 @@ describe('config', function () {
           redis: process.env.foobarStoreRedis
         })
       })
-    });
-  });
+    })
+  })
 
   it('should throw error on load config from source object (missing all fields)', async () => {
-    const schemaPath = `test/mocks/json-schema-base.yaml`;
-    const data = {};
+    const schemaPath = 'test/mocks/json-schema-base.yaml'
+    const data = {}
 
-    const config = async () => load({ schemaPath, data });
-    const resp = config();
-    expect(resp).rejects.toHaveProperty('code', 'validation-error');
-    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
-    expect(resp).rejects.toHaveProperty('message', `data.foobar should have required property 'username', data.foobar should have required property 'token', data.foobar should have required property 'uri', data.foobar.store should have required property 'redis'`);
+    const config = async () => load({ schemaPath, data })
+    const resp = config()
+    expect(resp).rejects.toHaveProperty('code', 'validation-error')
+    expect(resp).rejects.toHaveProperty('name', 'ValidationError')
+    expect(resp).rejects.toHaveProperty('message', 'data.foobar should have required property \'username\', data.foobar should have required property \'token\', data.foobar should have required property \'uri\', data.foobar.store should have required property \'redis\'')
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: `data.foobar should have required property 'username'`,
+        message: 'data.foobar should have required property \'username\'',
         code: 'validation-error',
         field: 'data.foobar'
       }),
       expect.objectContaining({
-        message: `data.foobar should have required property 'token'`,
+        message: 'data.foobar should have required property \'token\'',
         code: 'validation-error',
         field: 'data.foobar'
       }),
       expect.objectContaining({
-        message: `data.foobar should have required property 'uri'`,
+        message: 'data.foobar should have required property \'uri\'',
         code: 'validation-error',
         field: 'data.foobar'
       }),
       expect.objectContaining({
-        message: `data.foobar.store should have required property 'redis'`,
+        message: 'data.foobar.store should have required property \'redis\'',
         code: 'validation-error',
         field: 'data.foobar.store'
       })
-    ]));
-  });
+    ]))
+  })
 
   it('should throw error on root element type different then object', async () => {
-    const schemaPath = `test/mocks/json-schema-array.yaml`;
+    const schemaPath = 'test/mocks/json-schema-array.yaml'
     const data = {
       databaseConnectionString: 'http://o.oo',
       databasePoolSize: '9',
@@ -264,15 +266,15 @@ describe('config', function () {
       foobarToken: 'token',
       foobarUri: 'https://www.foobar.com/api/v2',
       foobarUsername: 'user'
-    };
+    }
 
-    const config = async () => load({ schemaPath, data });
-    expect(config()).rejects.toThrowError(Error('data should be array'));
-  });
-});
+    const config = async () => load({ schemaPath, data })
+    expect(config()).rejects.toThrowError(Error('data should be array'))
+  })
+})
 
 describe('error message', () => {
-  const schemaPath = `test/mocks/json-schema-error-messages.yaml`;
+  const schemaPath = 'test/mocks/json-schema-error-messages.yaml'
 
   it('should tells us that field is required', async () => {
     const data = {
@@ -283,21 +285,21 @@ describe('error message', () => {
       foobarTimeoutInMs: '100',
       foobarToken: 'token',
       foobarUsername: 'user'
-    };
+    }
 
-    const config = async () => load({ schemaPath, data });
-    const resp = config();
-    expect(resp).rejects.toHaveProperty('code', 'validation-error');
-    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
-    expect(resp).rejects.toHaveProperty('message', `data.foobar should have required property 'uri' with source key: "g2a-foobar-uri"`);
+    const config = async () => load({ schemaPath, data })
+    const resp = config()
+    expect(resp).rejects.toHaveProperty('code', 'validation-error')
+    expect(resp).rejects.toHaveProperty('name', 'ValidationError')
+    expect(resp).rejects.toHaveProperty('message', 'data.foobar should have required property \'uri\' with source key: "g2a-foobar-uri"')
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: `data.foobar should have required property 'uri' with source key: "g2a-foobar-uri"`,
+        message: 'data.foobar should have required property \'uri\' with source key: "g2a-foobar-uri"',
         code: 'validation-error',
         field: 'data.foobar'
       })
-    ]));
-  });
+    ]))
+  })
 
   it('should tells us that format is wrong', async () => {
     const data = {
@@ -309,21 +311,21 @@ describe('error message', () => {
       foobarToken: 'token',
       foobarUsername: 'user',
       'g2a-foobar-uri': 123
-    };
+    }
 
-    const config = async () => load({ schemaPath, data });
-    const resp = config();
-    expect(resp).rejects.toHaveProperty('code', 'validation-error');
-    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
-    expect(resp).rejects.toHaveProperty('message', `data.foobar.uri should match format "uri" with source key: "g2a-foobar-uri"`);
+    const config = async () => load({ schemaPath, data })
+    const resp = config()
+    expect(resp).rejects.toHaveProperty('code', 'validation-error')
+    expect(resp).rejects.toHaveProperty('name', 'ValidationError')
+    expect(resp).rejects.toHaveProperty('message', 'data.foobar.uri should match format "uri" with source key: "g2a-foobar-uri"')
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: `data.foobar.uri should match format "uri" with source key: "g2a-foobar-uri"`,
+        message: 'data.foobar.uri should match format "uri" with source key: "g2a-foobar-uri"',
         code: 'validation-error',
         field: 'data.foobar.uri'
       })
-    ]));
-  });
+    ]))
+  })
 
   it('should tells us that format (number with x-sourceKey) is wrong', async () => {
     const data = {
@@ -335,21 +337,21 @@ describe('error message', () => {
       foobarToken: 'token',
       foobarUsername: 'user',
       'g2a-foobar-uri': 'http://g2a.com'
-    };
+    }
 
-    const config = async () => load({ schemaPath, data });
-    const resp = config();
-    expect(resp).rejects.toHaveProperty('code', 'validation-error');
-    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
-    expect(resp).rejects.toHaveProperty('message', `data.foobar.customKey should be number with source key: "CUSTOM_KEY"`);
+    const config = async () => load({ schemaPath, data })
+    const resp = config()
+    expect(resp).rejects.toHaveProperty('code', 'validation-error')
+    expect(resp).rejects.toHaveProperty('name', 'ValidationError')
+    expect(resp).rejects.toHaveProperty('message', 'data.foobar.customKey should be number with source key: "CUSTOM_KEY"')
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: `data.foobar.customKey should be number with source key: "CUSTOM_KEY"`,
+        message: 'data.foobar.customKey should be number with source key: "CUSTOM_KEY"',
         code: 'validation-error',
         field: 'data.foobar.customKey'
       })
-    ]));
-  });
+    ]))
+  })
 
   it('should tells us that format (number) is wrong', async () => {
     const data = {
@@ -361,55 +363,55 @@ describe('error message', () => {
       foobarToken: 'token',
       foobarUsername: 'user',
       'g2a-foobar-uri': 'http://g2a.com'
-    };
+    }
 
-    const config = async () => load({ schemaPath, data });
-    const resp = config();
-    expect(resp).rejects.toHaveProperty('code', 'validation-error');
-    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
-    expect(resp).rejects.toHaveProperty('message', `data.foobar.customKey should be number with source key: "CUSTOM_KEY"`);
+    const config = async () => load({ schemaPath, data })
+    const resp = config()
+    expect(resp).rejects.toHaveProperty('code', 'validation-error')
+    expect(resp).rejects.toHaveProperty('name', 'ValidationError')
+    expect(resp).rejects.toHaveProperty('message', 'data.foobar.customKey should be number with source key: "CUSTOM_KEY"')
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: `data.foobar.customKey should be number with source key: "CUSTOM_KEY"`,
+        message: 'data.foobar.customKey should be number with source key: "CUSTOM_KEY"',
         code: 'validation-error',
         field: 'data.foobar.customKey'
       })
-    ]));
-  });
+    ]))
+  })
 
   it('should tells us that fields are missing in array', async () => {
     const data = {
-    };
+    }
 
-    const config = async () => load({ schemaPath, data });
-    const resp = config();
-    expect(resp).rejects.toHaveProperty('code', 'validation-error');
-    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
-    expect(resp).rejects.toHaveProperty('message', `data.foobar should have required property 'username', data.foobar should have required property 'token', data.foobar should have required property 'uri' with source key: "g2a-foobar-uri", data.foobar.store should have required property 'redis'`);
+    const config = async () => load({ schemaPath, data })
+    const resp = config()
+    expect(resp).rejects.toHaveProperty('code', 'validation-error')
+    expect(resp).rejects.toHaveProperty('name', 'ValidationError')
+    expect(resp).rejects.toHaveProperty('message', 'data.foobar should have required property \'username\', data.foobar should have required property \'token\', data.foobar should have required property \'uri\' with source key: "g2a-foobar-uri", data.foobar.store should have required property \'redis\'')
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: `data.foobar should have required property 'username'`,
+        message: 'data.foobar should have required property \'username\'',
         code: 'validation-error',
         field: 'data.foobar'
       }),
       expect.objectContaining({
-        message: `data.foobar should have required property 'token'`,
+        message: 'data.foobar should have required property \'token\'',
         code: 'validation-error',
         field: 'data.foobar'
       }),
       expect.objectContaining({
-        message: `data.foobar should have required property 'uri' with source key: "g2a-foobar-uri"`,
+        message: 'data.foobar should have required property \'uri\' with source key: "g2a-foobar-uri"',
         code: 'validation-error',
         field: 'data.foobar'
       }),
       expect.objectContaining({
-        message: `data.foobar.store should have required property 'redis'`,
+        message: 'data.foobar.store should have required property \'redis\'',
         code: 'validation-error',
         field: 'data.foobar.store'
       })
-    ]));
-  });
-});
+    ]))
+  })
+})
 
 describe('loadBySchema', () => {
   it('should load config from data by provided schema', async () => {
@@ -424,9 +426,9 @@ describe('loadBySchema', () => {
       foobarUsername: 'user',
       reConnectingString: 'redis://192.1.1.1/2',
       reConnectingString2: 'redis://192.1.1.1/3'
-    };
+    }
 
-    const config = await loadBySchema({ schema: BASE_JSON_SCHEMA, data });
+    const config = await loadBySchema({ schema: BASE_JSON_SCHEMA, data })
 
     expect(config).toMatchObject({
       database: expect.objectContaining({
@@ -446,8 +448,8 @@ describe('loadBySchema', () => {
       }),
       redis: data.reConnectingString,
       isEnabled: true
-    });
-  });
+    })
+  })
 
   it('should throw error on load config from source object (missing required field)', async () => {
     const data = {
@@ -458,27 +460,27 @@ describe('loadBySchema', () => {
       foobarTimeoutInMs: '100',
       foobarToken: 'token',
       foobarUsername: 'user'
-    };
+    }
 
-    const config = async () => loadBySchema({ schema: BASE_JSON_SCHEMA, data });
-    const resp = config();
-    expect(resp).rejects.toHaveProperty('code', 'validation-error');
-    expect(resp).rejects.toHaveProperty('name', 'ValidationError');
-    expect(resp).rejects.toHaveProperty('message', `data.foobar should have required property 'uri'`);
+    const config = async () => loadBySchema({ schema: BASE_JSON_SCHEMA, data })
+    const resp = config()
+    expect(resp).rejects.toHaveProperty('code', 'validation-error')
+    expect(resp).rejects.toHaveProperty('name', 'ValidationError')
+    expect(resp).rejects.toHaveProperty('message', 'data.foobar should have required property \'uri\'')
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: `data.foobar should have required property 'uri'`,
+        message: 'data.foobar should have required property \'uri\'',
         code: 'validation-error',
         field: 'data.foobar'
       })
-    ]));
-  });
-});
+    ]))
+  })
+})
 
 describe('format', () => {
   describe('snake case', () => {
     it('should load config from process.env object', async () => {
-      const schemaPath = `test/mocks/json-schema-format-snake-case.yaml`;
+      const schemaPath = 'test/mocks/json-schema-format-snake-case.yaml'
       process.env = {
         ...process.env,
         custom_key: '100000',
@@ -491,9 +493,9 @@ describe('format', () => {
         foobar_username: 'user',
         re_connecting_string: 'redis://192.1.1.1/2',
         re_connecting_string_2: 'redis://192.1.1.1/3'
-      };
+      }
 
-      const config = await loadFromEnvironment({ schemaPath });
+      const config = await loadFromEnvironment({ schemaPath })
 
       expect(config).toMatchObject({
         database: expect.objectContaining({
@@ -512,11 +514,11 @@ describe('format', () => {
           })
         }),
         redis: process.env.re_connecting_string
-      });
-    });
+      })
+    })
 
     it('should load config form source', async () => {
-      const schemaPath = `test/mocks/json-schema-format-snake-case.yaml`;
+      const schemaPath = 'test/mocks/json-schema-format-snake-case.yaml'
       const data = {
         custom_key: '100000',
         database_connection_string: 'http://o.oo',
@@ -525,9 +527,9 @@ describe('format', () => {
         foobar_uri: 'https://www.foobar.com/api/v2',
         foobar_username: 'user',
         foobar_store_redis: 'redis://192.1.1.1/1'
-      };
+      }
 
-      const config = await load({ data, schemaPath });
+      const config = await load({ data, schemaPath })
 
       expect(config).toMatchObject({
         database: expect.objectContaining({
@@ -544,22 +546,22 @@ describe('format', () => {
           })
         }),
         redis: undefined
-      });
-    });
+      })
+    })
 
     it('should throw error on source with missing one required field', async () => {
-      const schemaPath = `test/mocks/json-schema-format-snake-case.yaml`;
+      const schemaPath = 'test/mocks/json-schema-format-snake-case.yaml'
       const data = {
         database_connection_string: 'http://o.oo',
         database_pool_size: '9',
         foobar_uri: 'https://www.foobar.com/api/v2',
         foobar_username: 'user',
         'FOOBAR-STORE-REDIS': 'redis://192.1.1.1/1'
-      };
+      }
 
-      const config = async () => load({ schemaPath, data });
+      const config = async () => load({ schemaPath, data })
 
-      expect(config()).rejects.toThrowError(Error(`data.foobar should have required property 'token'`));
+      expect(config()).rejects.toThrowError(Error('data.foobar should have required property \'token\''))
 
       config().catch((err) => {
         expect(err).toHaveProperty('errors', expect.arrayContaining([
@@ -568,14 +570,14 @@ describe('format', () => {
             field: 'data.foobar',
             data: expect.objectContaining({ missingProperty: 'token' })
           })
-        ]));
-      });
-    });
-  });
+        ]))
+      })
+    })
+  })
 
   describe('camel case', () => {
     it('should load config from process.env object', async () => {
-      const schemaPath = `test/mocks/json-schema-format-camel-case.yaml`;
+      const schemaPath = 'test/mocks/json-schema-format-camel-case.yaml'
       process.env = {
         ...process.env,
         customKey: '100000',
@@ -588,9 +590,9 @@ describe('format', () => {
         foobarUsername: 'user',
         reConnectingString: 'redis://192.1.1.1/2',
         reConnectingString_2: 'redis://192.1.1.1/3'
-      };
+      }
 
-      const config = await loadFromEnvironment({ schemaPath });
+      const config = await loadFromEnvironment({ schemaPath })
 
       expect(config).toMatchObject({
         database: expect.objectContaining({
@@ -609,11 +611,11 @@ describe('format', () => {
           })
         }),
         redis: process.env.reConnectingString
-      });
-    });
+      })
+    })
 
     it('should load config form source', async () => {
-      const schemaPath = `test/mocks/json-schema-format-camel-case.yaml`;
+      const schemaPath = 'test/mocks/json-schema-format-camel-case.yaml'
       const data = {
         customKey: '100000',
         databaseConnectionString: 'http://o.oo',
@@ -622,9 +624,9 @@ describe('format', () => {
         foobarUri: 'https://www.foobar.com/api/v2',
         foobarUsername: 'user',
         foobarStoreRedis: 'redis://192.1.1.1/1'
-      };
+      }
 
-      const config = await load({ data, schemaPath });
+      const config = await load({ data, schemaPath })
 
       expect(config).toMatchObject({
         database: expect.objectContaining({
@@ -640,13 +642,13 @@ describe('format', () => {
           })
         }),
         redis: undefined
-      });
-    });
-  });
+      })
+    })
+  })
 
   describe('kebab case', () => {
     it('should load config from process.env object', async () => {
-      const schemaPath = `test/mocks/json-schema-format-kebab-case.yaml`;
+      const schemaPath = 'test/mocks/json-schema-format-kebab-case.yaml'
       process.env = {
         ...process.env,
         'custom-key': '100000',
@@ -659,9 +661,9 @@ describe('format', () => {
         'foobar-username': 'user',
         're-connecting-string': 'redis://192.1.1.1/2',
         're-connecting-string-2': 'redis://192.1.1.1/3'
-      };
+      }
 
-      const config = await loadFromEnvironment({ schemaPath });
+      const config = await loadFromEnvironment({ schemaPath })
 
       expect(config).toMatchObject({
         database: expect.objectContaining({
@@ -680,11 +682,11 @@ describe('format', () => {
           })
         }),
         redis: process.env['re-connecting-string']
-      });
-    });
+      })
+    })
 
     it('should load config form source', async () => {
-      const schemaPath = `test/mocks/json-schema-format-kebab-case.yaml`;
+      const schemaPath = 'test/mocks/json-schema-format-kebab-case.yaml'
       const data = {
         'custom-key': '100000',
         'database-connection-string': 'http://o.oo',
@@ -693,9 +695,9 @@ describe('format', () => {
         'foobar-uri': 'https://www.foobar.com/api/v2',
         'foobar-username': 'user',
         'foobar-store-redis': 'redis://192.1.1.1/1'
-      };
+      }
 
-      const config = await load({ data, schemaPath });
+      const config = await load({ data, schemaPath })
 
       expect(config).toMatchObject({
         database: expect.objectContaining({
@@ -711,13 +713,13 @@ describe('format', () => {
           })
         }),
         redis: undefined
-      });
-    });
-  });
+      })
+    })
+  })
 
   describe('auto', () => {
     it('should load config from process.env object with mixed cases', async () => {
-      const schemaPath = `test/mocks/json-schema-base.yaml`;
+      const schemaPath = 'test/mocks/json-schema-base.yaml'
       process.env = {
         ...process.env,
         'custom-key': '100000',
@@ -730,9 +732,9 @@ describe('format', () => {
         foobarUsername: 'user',
         RE_CONNECTING_STRING: 'redis://192.1.1.1/2',
         reConnectingString_2: 'redis://192.1.1.1/3'
-      };
+      }
 
-      const config = await loadFromEnvironment({ schemaPath });
+      const config = await loadFromEnvironment({ schemaPath })
 
       expect(config).toMatchObject({
         database: expect.objectContaining({
@@ -751,11 +753,11 @@ describe('format', () => {
           })
         }),
         redis: process.env.RE_CONNECTING_STRING
-      });
-    });
+      })
+    })
 
     it('should load config form source with mixed cases', async () => {
-      const schemaPath = `test/mocks/json-schema-base.yaml`;
+      const schemaPath = 'test/mocks/json-schema-base.yaml'
       const data = {
         customKey: '100000',
         database_connection_string: 'http://o.oo',
@@ -764,9 +766,9 @@ describe('format', () => {
         FoobarUri: 'https://www.foobar.com/api/v2',
         'foobar-username': 'user',
         foobarStoreRedis: 'redis://192.1.1.1/1'
-      };
+      }
 
-      const config = await load({ data, schemaPath });
+      const config = await load({ data, schemaPath })
 
       expect(config).toMatchObject({
         database: expect.objectContaining({
@@ -782,11 +784,11 @@ describe('format', () => {
           })
         }),
         redis: undefined
-      });
-    });
+      })
+    })
 
     it('should throw error on source with one missing required field', async () => {
-      const schemaPath = `test/mocks/json-schema-base.yaml`;
+      const schemaPath = 'test/mocks/json-schema-base.yaml'
       const data = {
         custom_key: '100000',
         'database-connection-string': 'http://o.oo',
@@ -794,25 +796,25 @@ describe('format', () => {
         'foobar/token': 'token',
         foobar_uri: 'https://www.foobar.com/api/v2',
         foobar_username: 'user'
-      };
+      }
 
-      const config = async () => load({ schemaPath, data });
+      const config = async () => load({ schemaPath, data })
 
-      expect(config()).rejects.toThrowError(Error(`data.foobar.store should have required property 'redis'`));
+      expect(config()).rejects.toThrowError(Error('data.foobar.store should have required property \'redis\''))
       config().catch((err) => {
         expect(err).toHaveProperty('errors', expect.arrayContaining([
           expect.objectContaining({
             code: 'validation-error',
             field: 'data.foobar.store'
           })
-        ]));
-      });
-    });
-  });
+        ]))
+      })
+    })
+  })
 
   describe('unknown', () => {
     it('should load config from process.env object with mixed cases', async () => {
-      const schemaPath = `test/mocks/json-schema-format-unknown.yaml`;
+      const schemaPath = 'test/mocks/json-schema-format-unknown.yaml'
       process.env = {
         ...process.env,
         'custom-key': '100000',
@@ -825,9 +827,9 @@ describe('format', () => {
         foobarUsername: 'user',
         RE_CONNECTING_STRING: 'redis://192.1.1.1/2',
         reConnectingString_2: 'redis://192.1.1.1/3'
-      };
+      }
 
-      const config = await loadFromEnvironment({ schemaPath });
+      const config = await loadFromEnvironment({ schemaPath })
 
       expect(config).toMatchObject({
         database: expect.objectContaining({
@@ -846,11 +848,11 @@ describe('format', () => {
           })
         }),
         redis: process.env.RE_CONNECTING_STRING
-      });
-    });
+      })
+    })
 
     it('should load config form source with mixed cases', async () => {
-      const schemaPath = `test/mocks/json-schema-format-unknown.yaml`;
+      const schemaPath = 'test/mocks/json-schema-format-unknown.yaml'
       const data = {
         customKey: '100000',
         database_connection_string: 'http://o.oo',
@@ -859,9 +861,9 @@ describe('format', () => {
         FoobarUri: 'https://www.foobar.com/api/v2',
         foobarUsername: 'user',
         foobarStoreRedis: 'redis://192.1.1.1/1'
-      };
+      }
 
-      const config = await load({ data, schemaPath });
+      const config = await load({ data, schemaPath })
 
       expect(config).toMatchObject({
         database: expect.objectContaining({
@@ -877,11 +879,11 @@ describe('format', () => {
           })
         }),
         redis: undefined
-      });
-    });
+      })
+    })
 
     it('should throw error on source with one missing required field', async () => {
-      const schemaPath = `test/mocks/json-schema-format-unknown.yaml`;
+      const schemaPath = 'test/mocks/json-schema-format-unknown.yaml'
       const data = {
         custom_key: '100000',
         'database-connection-string': 'http://o.oo',
@@ -889,19 +891,19 @@ describe('format', () => {
         'foobar/token': 'token',
         foobar_uri: 'https://www.foobar.com/api/v2',
         foobar_username: 'user'
-      };
+      }
 
-      const config = async () => load({ schemaPath, data });
+      const config = async () => load({ schemaPath, data })
 
-      expect(config()).rejects.toThrowError(Error(`data.foobar.store should have required property 'redis'`));
+      expect(config()).rejects.toThrowError(Error('data.foobar.store should have required property \'redis\''))
       config().catch((err) => {
         expect(err).toHaveProperty('errors', expect.arrayContaining([
           expect.objectContaining({
             code: 'validation-error',
             field: 'data.foobar.store'
           })
-        ]));
-      });
-    });
-  });
-});
+        ]))
+      })
+    })
+  })
+})

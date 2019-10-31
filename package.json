@@ -15,6 +15,7 @@
   "main": "dist/index.js",
   "typings": "typings/index.d.ts",
   "scripts": {
+    "lint": "standardx -v test/**/*.ts src/**/*.ts",
     "build": "rm -rf dist typings && tsc",
     "prepack": "npm run build",
     "test": "jest"
@@ -67,8 +68,22 @@
   },
   "devDependencies": {
     "@types/jest": "^24.0.19",
+    "@typescript-eslint/eslint-plugin": "^2.3.3",
+    "@typescript-eslint/parser": "^2.3.3",
     "jest": "^24.9.0",
+    "standardx": "^5.0.0",
     "ts-jest": "^24.1.0",
     "typescript": "^3.6.4"
+  },
+  "standardx": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint/eslint-plugin"
+    ]
+  },
+  "eslintConfig": {
+    "rules": {
+      "no-unused-vars": 0
+    }
   }
 }

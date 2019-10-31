@@ -1,0 +1,9 @@
+.DS_Store
+.scannerwork
+/.idea
+/.vscode
+coverage
+coverage.*
+dist
+node_modules
+test-report.json

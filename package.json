@@ -1,6 +1,6 @@
 {
   "name": "@g2a/config",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Set of utilities for loading configuration.",
   "repository": {
     "type": "git",

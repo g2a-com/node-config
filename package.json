@@ -1,19 +1,19 @@
 {
   "name": "@g2a/config",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "description": "Set of utilities for loading configuration.",
   "repository": {
     "type": "git",
     "url": "https://github.com/g2a-com/node-config"
   },
   "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "typings/index.d.ts",
   "files": [
     "dist/*",
     "src/*",
     "typings/*"
   ],
-  "main": "dist/index.js",
-  "typings": "typings/index.d.ts",
   "scripts": {
     "build": "rm -rf dist typings && tsc",
     "bump-version": "standard-version",
@@ -99,7 +99,7 @@
     "standard-version": "^8.0.1",
     "standardx": "^5.0.0",
     "ts-jest": "^24.1.0",
-    "typescript": "^3.6.4"
+    "typescript": "^4.1.3"
   },
   "standardx": {
     "parser": "@typescript-eslint/parser",

@@ -232,25 +232,25 @@ describe('config', function () {
     const resp = config()
     expect(resp).rejects.toHaveProperty('code', 'validation-error')
     expect(resp).rejects.toHaveProperty('name', 'ValidationError')
-    expect(resp).rejects.toHaveProperty('message', 'data.foobar should have required property \'username\', data.foobar should have required property \'token\', data.foobar should have required property \'uri\', data.foobar.store should have required property \'redis\'')
+    expect(resp).rejects.toHaveProperty('message', 'data/foobar should have required property \'username\', data/foobar should have required property \'token\', data/foobar should have required property \'uri\', data/foobar/store should have required property \'redis\'')
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: 'data.foobar should have required property \'username\'',
+        message: 'data/foobar should have required property \'username\'',
         code: 'validation-error',
         field: 'data.foobar'
       }),
       expect.objectContaining({
-        message: 'data.foobar should have required property \'token\'',
+        message: 'data/foobar should have required property \'token\'',
         code: 'validation-error',
         field: 'data.foobar'
       }),
       expect.objectContaining({
-        message: 'data.foobar should have required property \'uri\'',
+        message: 'data/foobar should have required property \'uri\'',
         code: 'validation-error',
         field: 'data.foobar'
       }),
       expect.objectContaining({
-        message: 'data.foobar.store should have required property \'redis\'',
+        message: 'data/foobar/store should have required property \'redis\'',
         code: 'validation-error',
         field: 'data.foobar.store'
       })
@@ -291,10 +291,10 @@ describe('error message', () => {
     const resp = config()
     expect(resp).rejects.toHaveProperty('code', 'validation-error')
     expect(resp).rejects.toHaveProperty('name', 'ValidationError')
-    expect(resp).rejects.toHaveProperty('message', 'data.foobar should have required property \'uri\' with source key: "g2a-foobar-uri"')
+    expect(resp).rejects.toHaveProperty('message', 'data/foobar should have required property \'uri\' with source key: "g2a-foobar-uri"')
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: 'data.foobar should have required property \'uri\' with source key: "g2a-foobar-uri"',
+        message: 'data/foobar should have required property \'uri\' with source key: "g2a-foobar-uri"',
         code: 'validation-error',
         field: 'data.foobar'
       })
@@ -317,10 +317,10 @@ describe('error message', () => {
     const resp = config()
     expect(resp).rejects.toHaveProperty('code', 'validation-error')
     expect(resp).rejects.toHaveProperty('name', 'ValidationError')
-    expect(resp).rejects.toHaveProperty('message', 'data.foobar.uri should match format "uri" with source key: "g2a-foobar-uri"')
+    expect(resp).rejects.toHaveProperty('message', 'data/foobar/uri should match format "uri" with source key: "g2a-foobar-uri"')
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: 'data.foobar.uri should match format "uri" with source key: "g2a-foobar-uri"',
+        message: 'data/foobar/uri should match format "uri" with source key: "g2a-foobar-uri"',
         code: 'validation-error',
         field: 'data.foobar.uri'
       })
@@ -343,10 +343,10 @@ describe('error message', () => {
     const resp = config()
     expect(resp).rejects.toHaveProperty('code', 'validation-error')
     expect(resp).rejects.toHaveProperty('name', 'ValidationError')
-    expect(resp).rejects.toHaveProperty('message', 'data.foobar.customKey should be number with source key: "CUSTOM_KEY"')
+    expect(resp).rejects.toHaveProperty('message', 'data/foobar/customKey should be number with source key: "CUSTOM_KEY"')
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: 'data.foobar.customKey should be number with source key: "CUSTOM_KEY"',
+        message: 'data/foobar/customKey should be number with source key: "CUSTOM_KEY"',
         code: 'validation-error',
         field: 'data.foobar.customKey'
       })
@@ -369,10 +369,10 @@ describe('error message', () => {
     const resp = config()
     expect(resp).rejects.toHaveProperty('code', 'validation-error')
     expect(resp).rejects.toHaveProperty('name', 'ValidationError')
-    expect(resp).rejects.toHaveProperty('message', 'data.foobar.customKey should be number with source key: "CUSTOM_KEY"')
+    expect(resp).rejects.toHaveProperty('message', 'data/foobar/customKey should be number with source key: "CUSTOM_KEY"')
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: 'data.foobar.customKey should be number with source key: "CUSTOM_KEY"',
+        message: 'data/foobar/customKey should be number with source key: "CUSTOM_KEY"',
         code: 'validation-error',
         field: 'data.foobar.customKey'
       })
@@ -387,25 +387,25 @@ describe('error message', () => {
     const resp = config()
     expect(resp).rejects.toHaveProperty('code', 'validation-error')
     expect(resp).rejects.toHaveProperty('name', 'ValidationError')
-    expect(resp).rejects.toHaveProperty('message', 'data.foobar should have required property \'username\', data.foobar should have required property \'token\', data.foobar should have required property \'uri\' with source key: "g2a-foobar-uri", data.foobar.store should have required property \'redis\'')
+    expect(resp).rejects.toHaveProperty('message', 'data/foobar should have required property \'username\', data/foobar should have required property \'token\', data/foobar should have required property \'uri\' with source key: "g2a-foobar-uri", data/foobar/store should have required property \'redis\'')
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: 'data.foobar should have required property \'username\'',
+        message: 'data/foobar should have required property \'username\'',
         code: 'validation-error',
         field: 'data.foobar'
       }),
       expect.objectContaining({
-        message: 'data.foobar should have required property \'token\'',
+        message: 'data/foobar should have required property \'token\'',
         code: 'validation-error',
         field: 'data.foobar'
       }),
       expect.objectContaining({
-        message: 'data.foobar should have required property \'uri\' with source key: "g2a-foobar-uri"',
+        message: 'data/foobar should have required property \'uri\' with source key: "g2a-foobar-uri"',
         code: 'validation-error',
         field: 'data.foobar'
       }),
       expect.objectContaining({
-        message: 'data.foobar.store should have required property \'redis\'',
+        message: 'data/foobar/store should have required property \'redis\'',
         code: 'validation-error',
         field: 'data.foobar.store'
       })
@@ -466,10 +466,10 @@ describe('loadBySchema', () => {
     const resp = config()
     expect(resp).rejects.toHaveProperty('code', 'validation-error')
     expect(resp).rejects.toHaveProperty('name', 'ValidationError')
-    expect(resp).rejects.toHaveProperty('message', 'data.foobar should have required property \'uri\'')
+    expect(resp).rejects.toHaveProperty('message', 'data/foobar should have required property \'uri\'')
     expect(resp).rejects.toHaveProperty('errors', expect.arrayContaining([
       expect.objectContaining({
-        message: 'data.foobar should have required property \'uri\'',
+        message: 'data/foobar should have required property \'uri\'',
         code: 'validation-error',
         field: 'data.foobar'
       })
@@ -561,7 +561,7 @@ describe('format', () => {
 
       const config = async () => load({ schemaPath, data })
 
-      expect(config()).rejects.toThrowError(Error('data.foobar should have required property \'token\''))
+      expect(config()).rejects.toThrowError(Error('data/foobar should have required property \'token\''))
 
       config().catch((err) => {
         expect(err).toHaveProperty('errors', expect.arrayContaining([
@@ -800,7 +800,7 @@ describe('format', () => {
 
       const config = async () => load({ schemaPath, data })
 
-      expect(config()).rejects.toThrowError(Error('data.foobar.store should have required property \'redis\''))
+      expect(config()).rejects.toThrowError(Error('data/foobar/store should have required property \'redis\''))
       config().catch((err) => {
         expect(err).toHaveProperty('errors', expect.arrayContaining([
           expect.objectContaining({
@@ -895,7 +895,7 @@ describe('format', () => {
 
       const config = async () => load({ schemaPath, data })
 
-      expect(config()).rejects.toThrowError(Error('data.foobar.store should have required property \'redis\''))
+      expect(config()).rejects.toThrowError(Error('data/foobar/store should have required property \'redis\''))
       config().catch((err) => {
         expect(err).toHaveProperty('errors', expect.arrayContaining([
           expect.objectContaining({

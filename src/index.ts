@@ -6,6 +6,7 @@ import get from 'lodash.get'
 import kebabCase from 'lodash.kebabcase'
 import merge from 'lodash.merge'
 import snakeCase from 'lodash.snakecase'
+import addFormats from 'ajv-formats'
 
 enum JSON_SCHEMA_KEYS {
   'sourceFormat' = 'x-sourceFormat',
@@ -123,12 +124,16 @@ function unflattenUsingSchema ({ schema, data, keyPrefix = '', transformCaseFn }
 
 function coerceConfig (schema: object, data: object, ajvOpts: AjvOptions = {}): void {
   const ajv = new Ajv({
+    validateFormats: true,
+    strict: false,
     allErrors: true,
     useDefaults: true,
     coerceTypes: true,
     verbose: true,
     ...ajvOpts
   })
+
+  ;(addFormats as any)(ajv)
 
   const isValid = ajv.validate(schema, data)
 
@@ -139,7 +144,9 @@ function coerceConfig (schema: object, data: object, ajvOpts: AjvOptions = {}): 
     throw new ValidationError(ajv.errorsText(enrichedErrors) || 'Invalid configuration', {
       errors: (enrichedErrors).map((err) => ({
         message: ajv.errorsText([err]),
-        field: `data${err.dataPath}`,
+        // FIXME: replacing "/" with "." is for keeping backward compatibility only
+        // remove this part in the next major version
+        field: `data${err.dataPath.replace(/\//g, '.')}`,
         data: err.params
       }))
     })
@@ -173,7 +180,7 @@ function objectToMap ({ source, transformCaseFn }: MapParams): Map<string, any> 
     .reduce((acc, [k, v]) => acc.set(transformCaseFn(k), v), new Map())
 }
 
-function enrichErrorMessage (err: Ajv.ErrorObject): ErrorObject {
+function enrichErrorMessage (err: ErrorObject): ErrorObject {
   // create deep copy of err object to not mutate later
   const error = merge({}, err)
 
